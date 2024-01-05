@@ -1,13 +1,14 @@
-"use client";
+// "use client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
+// import { useAuth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 
 export default function Home() {
-  const { isLoaded, userId } = useAuth();
+  const { userId } = auth();
 
-  if (isLoaded && userId) {
+  if (userId) {
     redirect("/dashboard");
   }
 

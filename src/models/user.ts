@@ -3,7 +3,6 @@ import mongoose, { Schema } from "mongoose";
 const userSchema = new Schema(
   {
     id: { type: String, required: true, lowercase: true },
-    customers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Customer" }],
   },
   {
     timestamps: true,

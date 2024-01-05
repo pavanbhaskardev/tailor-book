@@ -4,7 +4,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <main>
       {children}
-      <BottomBar />
+      {/* <BottomBar /> */}
     </main>
   );
 };

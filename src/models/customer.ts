@@ -1,32 +1,21 @@
 import mongoose, { Schema } from "mongoose";
 
-const orderSchema = new Schema(
-  {
-    orderId: String,
-    photos: [String],
-  },
-  {
-    timestamps: true,
-  }
-);
-
-const Order = mongoose.model("Order", orderSchema);
-
 const customerSchema = new Schema(
   {
-    id: String,
-    name: String,
-    number: Number,
-    shirtSize: [Number],
-    pantSize: [Number],
-    customerPhoto: String,
-    orders: [orderSchema],
+    userId: { type: "string", required: true, immutable: true },
+    customerId: { type: "string", required: true, immutable: true },
+    name: { type: String, required: true, lowercase: true },
+    number: { type: Number, required: true },
+    shirtSize: { type: [Number], required: true },
+    pantSize: { type: [Number], required: true },
+    customerPhoto: { type: String },
   },
   {
     timestamps: true,
   }
 );
 
-const Customer = mongoose.model("Customer", customerSchema);
+const Customer =
+  mongoose.models.Customer || mongoose.model("Customer", customerSchema);
 
-export { Customer, Order };
+export { Customer };

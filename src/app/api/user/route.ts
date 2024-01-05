@@ -1,12 +1,17 @@
+import { auth } from "@clerk/nextjs";
+import { NextResponse } from "next/server";
 import connectMongoDB from "@/lib/mongoDB";
 import User from "@/models/user";
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
+
+interface userDetails {
+  id: string;
+}
 
 export async function POST(request: Request) {
-  const { id } = await request.json();
+  const userDetails: userDetails = await request.json();
   const { userId } = auth();
 
+  // checking if the user is authenticated or not
   if (!userId) {
     return NextResponse.json(
       {
@@ -23,7 +28,7 @@ export async function POST(request: Request) {
   const createNewUser = async () => {
     // creating if user doesn't exist
     try {
-      const newUser = await User.create({ id });
+      const newUser = await User.create({ id: userDetails.id });
 
       return NextResponse.json(
         { message: "Customer created successfully", data: newUser },
@@ -41,7 +46,7 @@ export async function POST(request: Request) {
 
   // check if user exists already or not
   try {
-    const user = await User.find({ id }).limit(1);
+    const user = await User.find({ id: userDetails.id }).limit(1);
 
     if (user?.length !== 0) {
       return NextResponse.json(
