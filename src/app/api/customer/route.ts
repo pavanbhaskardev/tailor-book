@@ -3,19 +3,6 @@ import { NextResponse } from "next/server";
 import connectMongoDB from "@/lib/mongoDB";
 import { Customer } from "@/models/customer";
 
-// const authenticated = async () => {
-//   const { userId } = auth();
-//   // checking if the user is authenticated or not
-//   if (!userId) {
-//     return NextResponse.json(
-//       {
-//         message: "Unauthenticated",
-//       },
-//       { status: 401 }
-//     );
-//   }
-// };
-
 // to get the customer list
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,15 +11,14 @@ export async function GET(request: Request) {
   const offset = searchParams.get("offset");
   const limitValue = limit ? +limit : 10;
   const offsetValue = offset ? +offset : 0;
-  const { userId } = auth();
 
-  // checking if the user is authenticated or not
-  if (!userId) {
+  // added the case
+  if (!id) {
     return NextResponse.json(
       {
-        message: "Unauthenticated",
+        message: "Invalid userId",
       },
-      { status: 401 }
+      { status: 400 }
     );
   }
 
@@ -105,6 +91,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
+  const { userId } = auth();
 
   // checking if the user is authenticated or not
   if (!userId) {

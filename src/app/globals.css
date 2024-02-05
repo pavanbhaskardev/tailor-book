@@ -49,3 +49,9 @@
     --ring: 142.4 71.8% 29.2%;
   }
 }
+
+@layer components {
+  .clerk-profile {
+    @apply w-[90vw] max-w-screen-lg;
+  }
+}

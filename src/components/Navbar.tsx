@@ -1,9 +1,14 @@
 "use client";
 import React from "react";
-import { Bars2Icon } from "@heroicons/react/16/solid";
+import {
+  Bars2Icon,
+  ArrowLeftStartOnRectangleIcon,
+} from "@heroicons/react/16/solid";
 import Link from "next/link";
+import { SignOutButton } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Separator } from "./ui/separator";
+import avatarUtil from "@/utils/avatarUtil";
 
 import {
   Sheet,
@@ -24,6 +29,7 @@ import { usePathname } from "next/navigation";
 const Navbar = () => {
   const { user } = useUser();
   const pathname = usePathname();
+  const { color, initials } = avatarUtil(user?.fullName || "");
 
   const authenticatedLinks = user
     ? [
@@ -49,7 +55,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="flex justify-between items-center px-5 py-3 bg-card">
+    <nav className="flex justify-between items-center px-4 py-3 bg-card">
       <Link href={"/"}>
         <span className="flex items-center gap-1">
           <BookOpenIcon height={24} width={24} className="fill-primary" />
@@ -67,19 +73,27 @@ const Navbar = () => {
           {user ? (
             <div className="grid ">
               <SheetHeader>
-                <Avatar className="h-11 w-11 mb-2">
+                <Avatar className="h-11 w-11 mb-2 ">
                   <AvatarImage
                     src={user?.imageUrl}
                     alt={user?.fullName || ""}
                   />
-                  <AvatarFallback>CN</AvatarFallback>
+                  <AvatarFallback style={{ backgroundColor: color }}>
+                    {initials}
+                  </AvatarFallback>
                 </Avatar>
               </SheetHeader>
 
               <p className="text-ellipsis overflow-hidden">{user?.fullName}</p>
-              <Link href="/profile" className="text-xs text-muted-foreground">
-                View profile
-              </Link>
+
+              <SheetClose asChild>
+                <Link
+                  href="/profile"
+                  className="text-xs text-muted-foreground hover:underline"
+                >
+                  View profile
+                </Link>
+              </SheetClose>
               <Separator className="my-4" />
             </div>
           ) : null}
@@ -87,6 +101,7 @@ const Navbar = () => {
           {navLinks.map((details, index) => {
             if (details) {
               const { title, icon, link, active } = details;
+
               return (
                 <SheetClose asChild key={index}>
                   <Link
@@ -104,6 +119,17 @@ const Navbar = () => {
               return null;
             }
           })}
+
+          {user && (
+            <SignOutButton>
+              <SheetClose>
+                <span className="flex items-center gap-4 mt-2 hover:underline pr-3 py-2 rounded-md">
+                  <ArrowLeftStartOnRectangleIcon height={24} width={24} />
+                  Sign out
+                </span>
+              </SheetClose>
+            </SignOutButton>
+          )}
         </SheetContent>
       </Sheet>
     </nav>
