@@ -27,11 +27,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import Search from "@/components/Search";
-import { Slider } from "@/components/ui/slider";
-import { NoSymbolIcon } from "@heroicons/react/24/solid";
+import SizeDrawer from "@/components/SizeDrawer";
+import { PlusIcon } from "@heroicons/react/16/solid";
+import { XMarkIcon } from "@heroicons/react/16/solid";
+import { AnimatePresence, motion } from "framer-motion";
 
 const CreateOrder = () => {
   const [size, setSize] = useState<number>(0);
+  const [sizeList, setSizeList] = useState<number[]>([]);
 
   const customerSchema = z.object({
     customerName: z
@@ -54,38 +57,9 @@ const CreateOrder = () => {
     console.log(values);
   };
 
-  const sizeOptions = [
-    {
-      name: "1/4",
-      value: 0.25,
-    },
-    {
-      name: "1/2",
-      value: 0.5,
-    },
-    {
-      name: "3/4",
-      value: 0.75,
-    },
-    // {
-    //   name: <NoSymbolIcon height={24} width={24} />,
-    //   value: "reset",
-    // },
-  ];
-
-  const formatSize = (value: number) => {
-    let formattedDecimal = "";
-    const tolerance = 0.001; // A small tolerance value to handle floating-point precision issues
-
-    if (Math.abs((value % 1) - 0.25) < tolerance) {
-      formattedDecimal = "1/4";
-    } else if (Math.abs((value % 1) - 0.5) < tolerance) {
-      formattedDecimal = "1/2";
-    } else if (Math.abs((value % 1) - 0.75) < tolerance) {
-      formattedDecimal = "3/4";
-    }
-
-    return `${Math.floor(value)} ${formattedDecimal}`;
+  const removeSize = (index: number) => {
+    const newList = sizeList.filter((size, i) => i !== index);
+    setSizeList(newList);
   };
 
   return (
@@ -138,50 +112,56 @@ const CreateOrder = () => {
               <div>
                 <Label>Shirt Size</Label>
 
-                <Drawer>
-                  <DrawerTrigger asChild>
-                    <div className="w-full h-24 border border-input rounded-sm mt-2 cursor-pointer"></div>
-                  </DrawerTrigger>
+                <div className="w-full h-28 overflow-y-scroll p-4 border border-input rounded-sm mt-2 relative flex gap-4 flex-wrap">
+                  <AnimatePresence>
+                    {sizeList.map((size, index) => (
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        key={index}
+                        className="text-sm grid place-items-center h-14 w-14 border border-input rounded-sm relative"
+                      >
+                        {size}
 
-                  <DrawerContent className="">
-                    <div className="my-5 mx-10 space-y-4">
-                      <h3 className="text-4xl text-center font-medium">
-                        {formatSize(size)}
-                      </h3>
-
-                      <Slider
-                        value={[size]}
-                        max={120}
-                        step={1}
-                        onValueChange={([e]) => setSize(e)}
-                      />
-
-                      <div className="grid grid-cols-3 gap-2 h-20">
-                        {sizeOptions.map(({ value, name }) => {
-                          return (
-                            <Button
-                              key={value}
-                              variant="outline"
-                              className="h-full text-base"
-                              onClick={() =>
-                                setSize((previousSize) => previousSize + value)
-                              }
-                            >
-                              {name}
-                            </Button>
-                          );
-                        })}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button variant="outline" onClick={() => setSize(0)}>
-                          Clear
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="secondary"
+                          className="absolute w-5 h-5 -top-2 -right-2"
+                          onClick={() => removeSize(index)}
+                        >
+                          <XMarkIcon height={12} width={12} />
                         </Button>
-                        <Button>Add</Button>
-                      </div>
-                    </div>
-                  </DrawerContent>
-                </Drawer>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
+                  <SizeDrawer
+                    size={size}
+                    handleClear={() => setSize(0)}
+                    handleSizeChange={(value) => setSize(value)}
+                    addQatarSizes={(value) =>
+                      setSize((current) => current + value)
+                    }
+                    handleSizeList={() => {
+                      const list = [...sizeList];
+                      list.push(size);
+
+                      setSizeList(list);
+                    }}
+                  >
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="absolute right-2 bottom-2"
+                    >
+                      <PlusIcon height={16} width={16} />
+                    </Button>
+                  </SizeDrawer>
+                </div>
               </div>
 
               <div>
