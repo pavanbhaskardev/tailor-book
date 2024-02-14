@@ -5,10 +5,12 @@ import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { XMarkIcon } from "@heroicons/react/16/solid";
+import useSound from "use-sound";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { v4 as uuidv4 } from "uuid";
 import { SizeList } from "@/app/(userDashboard)/create-order/page";
+// import removalSound from "../../public/sounds/list_removal_sound.mp3";
 
 interface SizeDrawerProps {
   name: string;
@@ -17,6 +19,7 @@ interface SizeDrawerProps {
   setSize: React.Dispatch<React.SetStateAction<number>>;
   sizeList: SizeList[];
   setSizeList: React.Dispatch<React.SetStateAction<SizeList[]>>;
+  onDrawerClose: () => void;
 }
 
 const sizeOptions = [
@@ -35,7 +38,7 @@ const sizeOptions = [
 ];
 
 // this return the decimal sizes in readable format
-const formatSize = (value: number) => {
+export const formatSize = (value: number) => {
   switch (value) {
     case 0.25:
       return "1/4";
@@ -60,6 +63,7 @@ const SizeDrawer = ({
   setSize,
   sizeList,
   setSizeList,
+  onDrawerClose,
 }: SizeDrawerProps) => {
   const containerRef = useRef(null);
   const [onHold, setOnHold] = useState<EditInterface>({
@@ -71,6 +75,11 @@ const SizeDrawer = ({
     id: "",
   });
   const activeHoldRef = useRef(null);
+  // these are for sound interaction
+  const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
+  const [playAddListSound] = useSound("/sounds/list_add_sound.mp3", {
+    volume: 0.4,
+  });
 
   // this is to show which size to show based on the edit status
   const editSize = [...sizeList].filter(({ id }) => id === isEdit.id);
@@ -170,7 +179,12 @@ const SizeDrawer = ({
   };
 
   return (
-    <Drawer onClose={() => setSize(0)}>
+    <Drawer
+      onClose={() => {
+        setSize(0);
+        onDrawerClose();
+      }}
+    >
       <DrawerTrigger asChild>{children}</DrawerTrigger>
 
       <DrawerContent className="">
@@ -200,7 +214,7 @@ const SizeDrawer = ({
                       onMouseOut={onHoldEnd}
                       onTouchCancel={onHoldEnd}
                       onTouchEnd={onHoldEnd}
-                      className={`text-sm flex items-center justify-center h-16 w-16 transition-colors border ${
+                      className={`flex items-center justify-center h-16 w-16 transition-colors border ${
                         isEdit.status && isEdit.id === id
                           ? "border-primary"
                           : "border-input"
@@ -216,7 +230,10 @@ const SizeDrawer = ({
                         size="icon"
                         variant="secondary"
                         className="absolute w-5 h-5 -top-2 -right-2"
-                        onClick={() => removeSize(id)}
+                        onClick={() => {
+                          removeSize(id);
+                          play();
+                        }}
                       >
                         <XMarkIcon height={12} width={12} />
                       </Button>
@@ -267,7 +284,10 @@ const SizeDrawer = ({
               Clear
             </Button>
             <Button
-              onClick={handleSizeList}
+              onClick={() => {
+                handleSizeList();
+                playAddListSound();
+              }}
               disabled={size === 0 && !isEdit.status}
             >
               {isEdit.status ? "Edit" : "Add"}

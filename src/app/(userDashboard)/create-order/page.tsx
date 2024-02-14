@@ -5,33 +5,23 @@ import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { type FieldValues, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isEmpty } from "ramda";
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import Search from "@/components/Search";
 import SizeDrawer from "@/components/SizeDrawer";
 import { PlusIcon } from "@heroicons/react/16/solid";
-import { XMarkIcon } from "@heroicons/react/16/solid";
-import { AnimatePresence, motion } from "framer-motion";
-
+import { formatSize } from "@/components/SizeDrawer";
 export interface SizeList {
   size: number;
   id: string;
@@ -40,6 +30,12 @@ export interface SizeList {
 const CreateOrder = () => {
   const [size, setSize] = useState<number>(0);
   const [sizeList, setSizeList] = useState<SizeList[]>([]);
+  const [pantSize, setPantSize] = useState<number>(0);
+  const [pantSizeList, setPantSizeList] = useState<SizeList[]>([]);
+  const [errorStatus, setErrorStatus] = useState({
+    shirtListStatus: false,
+    pantSizeListStatus: false,
+  });
 
   const customerSchema = z.object({
     customerName: z
@@ -59,12 +55,44 @@ const CreateOrder = () => {
   });
 
   const onSubmit = (values: FieldValues) => {
+    if (isEmpty(shirtSizeList)) {
+      setErrorStatus((current) => ({ ...current, shirtListStatus: true }));
+    } else {
+      setErrorStatus((current) => ({ ...current, shirtListStatus: false }));
+    }
+
+    if (isEmpty(pantSizeList)) {
+      setErrorStatus((current) => ({ ...current, pantSizeListStatus: true }));
+    } else {
+      setErrorStatus((current) => ({ ...current, pantSizeListStatus: false }));
+    }
+
     console.log(values);
   };
 
-  const removeSize = (index: number) => {
-    const newList = sizeList.filter((size, i) => i !== index);
-    setSizeList(newList);
+  const shirtSizeList = sizeList.map(({ size }, index) => {
+    const flooredSize = Math.floor(size);
+
+    return { size: flooredSize, quarter: formatSize(size - flooredSize) };
+  });
+
+  const formattedPantSizeList = pantSizeList.map(({ size }, index) => {
+    const flooredSize = Math.floor(size);
+
+    return { size: flooredSize, quarter: formatSize(size - flooredSize) };
+  });
+
+  const onDrawerClose = () => {
+    if (!isEmpty(shirtSizeList)) {
+      setErrorStatus((current) => ({ ...current, shirtListStatus: false }));
+    }
+
+    if (!isEmpty(pantSizeList)) {
+      setErrorStatus((current) => ({
+        ...current,
+        pantSizeListStatus: false,
+      }));
+    }
   };
 
   return (
@@ -84,7 +112,7 @@ const CreateOrder = () => {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit((values) => onSubmit(values))}
-              className="space-y-4"
+              className="space-y-8"
             >
               <FormField
                 control={form.control}
@@ -114,34 +142,82 @@ const CreateOrder = () => {
                 )}
               />
 
-              <div className="relative">
-                <Label>Shirt Size</Label>
-
-                <SizeDrawer
-                  name={"Shirt Size"}
-                  size={size}
-                  setSize={setSize}
-                  sizeList={sizeList}
-                  setSizeList={setSizeList}
+              <div className="flex flex-col gap-3">
+                <Label
+                  className={`${
+                    errorStatus.shirtListStatus ? "text-destructive" : ""
+                  }`}
                 >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="absolute right-2 bottom-2"
+                  Shirt Size
+                </Label>
+
+                <div className="flex flex-wrap gap-3 items-center border border-input p-2 rounded-sm">
+                  {shirtSizeList.map(({ size, quarter }, index) => (
+                    <span key={index}>
+                      {size} <sup>{quarter}</sup>
+                      {index !== shirtSizeList.length - 1 ? "," : ""}
+                    </span>
+                  ))}
+
+                  <SizeDrawer
+                    name={"Shirt Size"}
+                    size={size}
+                    setSize={setSize}
+                    sizeList={sizeList}
+                    setSizeList={setSizeList}
+                    onDrawerClose={onDrawerClose}
                   >
-                    <PlusIcon height={16} width={16} />
-                  </Button>
-                </SizeDrawer>
+                    <Button type="button" variant="secondary" size="icon">
+                      <PlusIcon height={16} width={16} />
+                    </Button>
+                  </SizeDrawer>
+                </div>
+                {errorStatus.shirtListStatus && (
+                  <FormDescription className="text-destructive">
+                    Shirt list can&apos;t be empty
+                  </FormDescription>
+                )}
               </div>
 
-              <div>
-                <Label>Pant Size</Label>
-                <div className="w-full h-24 border border-input rounded-sm mt-2"></div>
+              <div className="flex flex-col gap-3">
+                <Label
+                  className={`${
+                    errorStatus.pantSizeListStatus ? "text-destructive" : ""
+                  }`}
+                >
+                  Pant Size
+                </Label>
+
+                <div className="flex flex-wrap gap-3 items-center border border-input p-2 rounded-sm">
+                  {formattedPantSizeList.map(({ size, quarter }, index) => (
+                    <span key={index}>
+                      {size} <sup>{quarter}</sup>
+                      {index !== formattedPantSizeList.length - 1 ? "," : ""}
+                    </span>
+                  ))}
+
+                  <SizeDrawer
+                    name={"Pant Size"}
+                    size={pantSize}
+                    setSize={setPantSize}
+                    sizeList={pantSizeList}
+                    setSizeList={setPantSizeList}
+                    onDrawerClose={onDrawerClose}
+                  >
+                    <Button type="button" variant="secondary" size="icon">
+                      <PlusIcon height={16} width={16} />
+                    </Button>
+                  </SizeDrawer>
+                </div>
+                {errorStatus.pantSizeListStatus && (
+                  <FormDescription className="text-destructive">
+                    Pant list can&apos;t be empty
+                  </FormDescription>
+                )}
               </div>
 
               <Button type="submit" className="gap-1">
-                Create Order
+                Create Customer
                 <ArrowRightIcon height={16} width={16} />
               </Button>
             </form>
