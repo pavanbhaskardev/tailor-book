@@ -9,7 +9,7 @@ import useSound from "use-sound";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { v4 as uuidv4 } from "uuid";
-import { SizeList } from "@/app/(userDashboard)/create-order/page";
+import { SizeList } from "./create-order/StepOne";
 // import removalSound from "../../public/sounds/list_removal_sound.mp3";
 
 interface SizeDrawerProps {
