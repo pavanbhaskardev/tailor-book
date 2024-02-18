@@ -5,6 +5,7 @@ import ThemeProvider from "@/components/ThemeProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
 import { dark } from "@clerk/themes";
+import QueryProvider from "@/components/QueryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -36,8 +37,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Navbar />
-            <main className="px-4 my-3">{children}</main>
+            <QueryProvider>
+              <Navbar />
+              <main className="px-4 my-3">{children}</main>
+            </QueryProvider>
           </ThemeProvider>
         </body>
       </html>

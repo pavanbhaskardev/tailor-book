@@ -1,0 +1,494 @@
+"use client";
+import React, { ChangeEvent, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../../ui/form";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { Avatar, AvatarImage } from "../../ui/avatar";
+import Search from "@/components/Search";
+import { Button } from "@/components/ui/button";
+import { ArrowRightIcon } from "@heroicons/react/24/solid";
+import { isEmpty } from "ramda";
+import { CustomerDetails, SizeList } from "@/utils/interfaces";
+import axiosConfig from "@/utils/axiosConfig";
+import { useAuth } from "@clerk/nextjs";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { type FieldValues, useForm } from "react-hook-form";
+import { formatSize } from "@/components/SizeDrawer";
+import SizeDrawer from "@/components/SizeDrawer";
+import { PlusIcon } from "@heroicons/react/16/solid";
+import debounce from "lodash.debounce";
+import { useQuery, useMutation, useIsMutating } from "@tanstack/react-query";
+import { RadioGroup } from "@/components/ui/radio-group";
+import UserOption from "./UserOption";
+import {
+  getS3URL,
+  uploadImageToS3,
+  createNewCustomer,
+} from "@/utils/commonApi";
+
+interface ApiDetails {
+  id: string;
+  limit: number;
+  offset: number;
+  searchWord: string;
+  setSelectedCustomerId: React.Dispatch<React.SetStateAction<string>>;
+}
+
+// this will get the list of all the customers
+const getOldCustomersList = async ({
+  id,
+  limit,
+  offset,
+  searchWord,
+  setSelectedCustomerId,
+}: ApiDetails) => {
+  try {
+    // whenever on API setting the selectedCustomerId to empty
+    setSelectedCustomerId("");
+
+    const response = await axiosConfig({
+      url: "api/customer",
+      method: "GET",
+      params: {
+        id,
+        limit,
+        offset,
+        searchWord: searchWord.trim(),
+      },
+    });
+
+    return response?.data?.data || [];
+  } catch (error: unknown) {
+    if (error && error?.request?.status) {
+      throw new Error(error?.request?.status);
+    }
+  }
+};
+
+// this will call the refetch fn after a debounce
+const handleDebounce = debounce((refetch) => {
+  refetch();
+}, 800);
+
+const maxFileSize = 1024 * 1024 * 10;
+
+const StepOne = () => {
+  const [size, setSize] = useState<number>(0);
+  const [shirtList, setShirtList] = useState<SizeList[]>([]);
+  const [pantSize, setPantSize] = useState<number>(0);
+  const [pantSizeList, setPantSizeList] = useState<SizeList[]>([]);
+  const [errorStatus, setErrorStatus] = useState({
+    shirtListStatus: false,
+    pantSizeListStatus: false,
+    imageSizeStatus: false,
+  });
+  const [imageFile, setImageFile] = useState<File | undefined>();
+  const [avatarURL, setAvatarURL] = useState<string>("");
+  const [searchWord, setSearchWord] = useState("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const { userId } = useAuth();
+  const btnRef = useRef(null);
+  const mutationCount = useIsMutating();
+
+  console.log({ mutationCount });
+
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["old-customers-list"],
+    queryFn: () =>
+      getOldCustomersList({
+        searchWord,
+        id: userId || "",
+        offset: 0,
+        limit: 20,
+        setSelectedCustomerId,
+      }),
+    enabled: false,
+  });
+
+  const { mutateAsync: s3UrlMutation } = useMutation({
+    mutationFn: getS3URL,
+    mutationKey: ["get-s3-url"],
+  });
+
+  const { mutateAsync: uploadImageMutation } = useMutation({
+    mutationFn: uploadImageToS3,
+    mutationKey: ["upload-to-s3"],
+  });
+
+  const { mutate } = useMutation({
+    mutationFn: createNewCustomer,
+    mutationKey: ["create-customer"],
+  });
+
+  const customerSchema = z.object({
+    customerName: z
+      .string({
+        required_error: "Name is required",
+      })
+      .min(3, "Name must be at least 3 characters"),
+    phoneNumber: z
+      .string({
+        required_error: "Phone Number is required",
+      })
+      .min(10, "Number must be at least 10 characters"),
+  });
+
+  const form = useForm<z.infer<typeof customerSchema>>({
+    resolver: zodResolver(customerSchema),
+  });
+
+  // handling the validation for controlled inputs shirtSize & pantSize
+  const validateSizeList = async () => {
+    if (isEmpty(shirtSizeList)) {
+      setErrorStatus((current) => ({ ...current, shirtListStatus: true }));
+    } else {
+      setErrorStatus((current) => ({ ...current, shirtListStatus: false }));
+    }
+
+    if (isEmpty(pantSizeList)) {
+      setErrorStatus((current) => ({
+        ...current,
+        pantSizeListStatus: true,
+      }));
+    } else {
+      setErrorStatus((current) => ({
+        ...current,
+        pantSizeListStatus: false,
+      }));
+    }
+  };
+
+  const onSubmit = async (values: FieldValues) => {
+    let imageURL = "";
+
+    // not uploading data when shirt or pant size is empty
+    if (isEmpty(shirtSizeList) || isEmpty(pantSizeList) || !userId) {
+      return;
+    }
+
+    // if user uploaded image greater than 10mb exiting api call
+    if (imageFile && imageFile.size > maxFileSize) {
+      return;
+    }
+
+    // checking if user added photo or not
+    if (imageFile) {
+      await s3UrlMutation(imageFile, {
+        onSuccess: (response) => {
+          imageURL = response?.data?.url;
+        },
+      });
+
+      // checking for s3 presigned URL
+      if (!isEmpty(imageURL)) {
+        await uploadImageMutation(
+          {
+            file: imageFile,
+            url: imageURL,
+          },
+          {
+            onSuccess: (response) => {
+              const url = response?.config?.url || "";
+              imageURL = url.split("?")[0];
+            },
+            onError: (error) => {
+              console.log(error);
+              imageURL = "";
+            },
+          }
+        );
+      }
+    }
+
+    mutate(
+      {
+        name: values.customerName,
+        number: values.phoneNumber,
+        userId,
+        customerId: uuidv4(),
+        shirtSize: shirtList.map(({ size }) => size),
+        pantSize: pantSizeList.map(({ size }) => size),
+        customerPhoto: imageURL,
+      },
+      {
+        onSuccess: (response) => {
+          console.log(response?.data?.data);
+        },
+      }
+    );
+  };
+
+  // returns the formatted sizes list
+  const shirtSizeList = shirtList.map(({ size }, index) => {
+    const flooredSize = Math.floor(size);
+
+    return { size: flooredSize, quarter: formatSize(size - flooredSize) };
+  });
+
+  // returns the formatted sizes list
+  const formattedPantSizeList = pantSizeList.map(({ size }, index) => {
+    const flooredSize = Math.floor(size);
+
+    return { size: flooredSize, quarter: formatSize(size - flooredSize) };
+  });
+
+  // here validating the sizeList conditions
+  const onDrawerClose = () => {
+    if (!isEmpty(shirtSizeList)) {
+      setErrorStatus((current) => ({ ...current, shirtListStatus: false }));
+    }
+
+    if (!isEmpty(pantSizeList)) {
+      setErrorStatus((current) => ({
+        ...current,
+        pantSizeListStatus: false,
+      }));
+    }
+  };
+
+  // storing the image in state when the upload the image
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setImageFile(file);
+
+    if (file && file?.size > maxFileSize) {
+      setErrorStatus((current) => ({ ...current, imageSizeStatus: true }));
+    } else {
+      setErrorStatus((current) => ({ ...current, imageSizeStatus: false }));
+    }
+
+    if (avatarURL) {
+      URL.revokeObjectURL(avatarURL);
+    }
+
+    // this gives the preview of the image to the user
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setAvatarURL(url);
+    } else {
+      setAvatarURL("");
+    }
+  };
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchWord(e.target.value);
+
+    handleDebounce(refetch);
+  };
+
+  // triggered when old customers selected
+  const handleCustomerSelect = (id: string) => {
+    setSelectedCustomerId(id);
+    const submitBtn = btnRef.current;
+
+    // scrolls to the submit button after selecting a customer
+    if (submitBtn) {
+      setTimeout(() => {
+        submitBtn.scrollIntoView({ behavior: "smooth" });
+      }, 10);
+    }
+  };
+
+  return (
+    <Tabs defaultValue="newCustomer" className="mt-4">
+      <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsTrigger value="newCustomer">New Customer</TabsTrigger>
+        <TabsTrigger value="oldCustomer">Old Customer</TabsTrigger>
+      </TabsList>
+
+      {/* creating customer content */}
+      <TabsContent value="newCustomer">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((values) => onSubmit(values))}
+            className="space-y-8"
+          >
+            <FormField
+              control={form.control}
+              name="customerName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex flex-col gap-3">
+              <Label
+                className={`${
+                  errorStatus.imageSizeStatus ? "text-destructive" : ""
+                }`}
+              >
+                Photo
+              </Label>
+
+              <div className="flex gap-2 items-center">
+                <Avatar className="bg-input">
+                  <AvatarImage
+                    src={avatarURL}
+                    // className="object-cover"
+                    alt="customer"
+                  />
+                </Avatar>
+                <Input
+                  type="file"
+                  capture="user"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleImageChange}
+                />
+              </div>
+
+              {errorStatus.imageSizeStatus && (
+                <FormDescription className="text-destructive">
+                  File size can&apos;t be greater than 10MB
+                </FormDescription>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Label
+                className={`${
+                  errorStatus.shirtListStatus ? "text-destructive" : ""
+                }`}
+              >
+                Shirt Size
+              </Label>
+
+              <div className="flex flex-wrap gap-3 items-center border border-input p-2 rounded-sm">
+                {shirtSizeList.map(({ size, quarter }, index) => (
+                  <span key={index}>
+                    {size} <sup>{quarter}</sup>
+                    {index !== shirtSizeList.length - 1 ? "," : ""}
+                  </span>
+                ))}
+
+                <SizeDrawer
+                  name={"Shirt Size"}
+                  size={size}
+                  setSize={setSize}
+                  sizeList={shirtList}
+                  setSizeList={setShirtList}
+                  onDrawerClose={onDrawerClose}
+                >
+                  <Button type="button" variant="secondary" size="icon">
+                    <PlusIcon height={16} width={16} />
+                  </Button>
+                </SizeDrawer>
+              </div>
+              {errorStatus.shirtListStatus && (
+                <FormDescription className="text-destructive">
+                  Shirt list can&apos;t be empty
+                </FormDescription>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Label
+                className={`${
+                  errorStatus.pantSizeListStatus ? "text-destructive" : ""
+                }`}
+              >
+                Pant Size
+              </Label>
+
+              <div className="flex flex-wrap gap-3 items-center border border-input p-2 rounded-sm">
+                {formattedPantSizeList.map(({ size, quarter }, index) => (
+                  <span key={index}>
+                    {size} <sup>{quarter}</sup>
+                    {index !== formattedPantSizeList.length - 1 ? "," : ""}
+                  </span>
+                ))}
+
+                <SizeDrawer
+                  name={"Pant Size"}
+                  size={pantSize}
+                  setSize={setPantSize}
+                  sizeList={pantSizeList}
+                  setSizeList={setPantSizeList}
+                  onDrawerClose={onDrawerClose}
+                >
+                  <Button type="button" variant="secondary" size="icon">
+                    <PlusIcon height={16} width={16} />
+                  </Button>
+                </SizeDrawer>
+              </div>
+              {errorStatus.pantSizeListStatus && (
+                <FormDescription className="text-destructive">
+                  Pant list can&apos;t be empty
+                </FormDescription>
+              )}
+            </div>
+
+            <Button type="submit" onClick={validateSizeList} className="gap-1">
+              Create Customer
+              <ArrowRightIcon height={16} width={16} />
+            </Button>
+          </form>
+        </Form>
+      </TabsContent>
+
+      {/* adding existing customer */}
+      <TabsContent value="oldCustomer" className="space-y-4">
+        <Search
+          placeholder="Enter customer name"
+          value={searchWord}
+          onChange={handleChange}
+          spin={isLoading || isFetching}
+        />
+
+        <RadioGroup
+          value={selectedCustomerId}
+          onValueChange={handleCustomerSelect}
+        >
+          {!isEmpty(data || [])
+            ? data?.map((details: CustomerDetails, index: number) => {
+                return <UserOption details={details} key={index} />;
+              })
+            : null}
+        </RadioGroup>
+
+        {isEmpty(data || []) && !isLoading && !isFetching && data ? (
+          <p className="text-center">No results found!</p>
+        ) : null}
+
+        {!isEmpty(selectedCustomerId) && (
+          <Button type="submit" className="gap-1" ref={btnRef}>
+            Create Order
+            <ArrowRightIcon height={16} width={16} />
+          </Button>
+        )}
+      </TabsContent>
+    </Tabs>
+  );
+};
+
+export default StepOne;

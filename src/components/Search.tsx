@@ -1,8 +1,16 @@
-import React from "react";
+import React, { ChangeEvent } from "react";
 import { Input } from "./ui/input";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
+import { ArrowPathIcon } from "@heroicons/react/24/solid";
 
-const Search = ({ placeholder }: { placeholder: string }) => {
+interface SearchProps {
+  placeholder: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  spin: boolean;
+}
+
+const Search = ({ placeholder, onChange, value, spin }: SearchProps) => {
   return (
     <div className="relative">
       <MagnifyingGlassIcon
@@ -10,7 +18,20 @@ const Search = ({ placeholder }: { placeholder: string }) => {
         width={20}
         className="absolute top-[0.45rem] left-2 fill-muted-foreground"
       />
-      <Input type="text" placeholder={placeholder} className="pl-9" />
+      <Input
+        type="text"
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+        className="px-9"
+      />
+      {spin && (
+        <ArrowPathIcon
+          height={20}
+          width={20}
+          className="absolute top-[0.5rem] right-2 animate-spin fill-muted-foreground"
+        />
+      )}
     </div>
   );
 };

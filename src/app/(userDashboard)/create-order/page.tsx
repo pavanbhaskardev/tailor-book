@@ -1,37 +1,68 @@
 "use client";
-import React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { ArrowRightIcon } from "@heroicons/react/24/solid";
-import Search from "@/components/Search";
-import StepOne from "@/components/create-order/StepOne";
+import React, { useState } from "react";
+import StepOne from "@/components/create-order/stepOne/StepOne";
+import { UserIcon } from "@heroicons/react/16/solid";
+import { DocumentCheckIcon } from "@heroicons/react/16/solid";
+import { CheckIcon } from "@heroicons/react/16/solid";
+
+const allSteps = {
+  1: {
+    description: "Customer details",
+  },
+  2: {
+    description: "Order details",
+  },
+  3: {
+    description: "Confirmation",
+  },
+};
 
 const CreateOrder = () => {
+  const [activeStep, setActiveStep] = useState<number>(1);
+
   return (
     <section>
-      <div className="flex items-center gap-2">
-        <h2 className="font-medium text-2xl">Step 1</h2>
-      </div>
-      <p className="text-muted-foreground text-sm">Enter customer details.</p>
+      <ol className="flex items-center w-full">
+        <li
+          className={`flex w-full items-center after:content-[''] after:w-full after:h-1 after:border-b after:border-4 after:inline-block ${
+            activeStep !== 1 ? "after:border-primary" : "after:border-input"
+          }`}
+        >
+          <span className="flex items-center justify-center w-10 h-10 rounded-full lg:h-12 lg:w-12 bg-primary shrink-0">
+            <UserIcon height={20} width={20} className="text-background" />
+          </span>
+        </li>
 
-      <Tabs defaultValue="newCustomer" className="mt-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="newCustomer">New Customer</TabsTrigger>
-          <TabsTrigger value="oldCustomer">Old Customer</TabsTrigger>
-        </TabsList>
+        <li
+          className={`flex w-full items-center after:content-[''] after:w-full after:h-1 after:border-b after:border-4 after:inline-block ${
+            activeStep >= 2 ? "after:border-primary" : "after:border-input"
+          } `}
+        >
+          <span
+            className={`flex items-center justify-center w-10 h-10 rounded-full lg:h-12 lg:w-12 ${
+              activeStep >= 2 ? "bg-primary text-background" : "bg-input"
+            }  shrink-0`}
+          >
+            <DocumentCheckIcon height={20} width={20} />
+          </span>
+        </li>
 
-        <TabsContent value="newCustomer">
-          <StepOne />
-        </TabsContent>
+        <li className="flex items-center w-max">
+          <span
+            className={`flex items-center justify-center w-10 h-10 rounded-full lg:h-12 lg:w-12 ${
+              activeStep === 3 ? "bg-primary text-background" : "bg-input"
+            }  shrink-0`}
+          >
+            <CheckIcon height={20} width={20} />
+          </span>
+        </li>
+      </ol>
 
-        <TabsContent value="oldCustomer" className="space-y-4">
-          <Search placeholder="Enter customer name" />
-          <Button type="submit" className="gap-1">
-            Create Order
-            <ArrowRightIcon height={16} width={16} />
-          </Button>
-        </TabsContent>
-      </Tabs>
+      <p className="mt-4 mb-8 text-lg text-muted-foreground">
+        {allSteps[activeStep].description}
+      </p>
+
+      <StepOne />
     </section>
   );
 };

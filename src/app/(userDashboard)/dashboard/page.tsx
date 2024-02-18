@@ -15,7 +15,6 @@ const getCustomerList = async (userId: string) => {
     );
 
     const data = await response.json();
-    console.log({ data });
   } catch (error) {
     console.log("error details", error);
   }

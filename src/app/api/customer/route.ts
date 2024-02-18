@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   const offset = searchParams.get("offset");
   const limitValue = limit ? +limit : 10;
   const offsetValue = offset ? +offset : 0;
+  const searchWord = searchParams.get("searchWord") || "";
 
   // added the case
   if (!id) {
@@ -28,6 +29,7 @@ export async function GET(request: Request) {
   try {
     const response = await Customer.find({
       userId: id,
+      name: { $regex: searchWord, $options: "i" },
     })
       .limit(limitValue)
       .skip(offsetValue * limitValue);
@@ -58,6 +60,8 @@ export async function POST(request: Request) {
       { status: 401 }
     );
   }
+
+  console.log(customerDetails);
 
   // connects to MongoDB
   await connectMongoDB();
