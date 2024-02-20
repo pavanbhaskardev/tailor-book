@@ -18,7 +18,7 @@ import {
   SheetHeader,
 } from "@/components/ui/sheet";
 import { Button } from "./ui/button";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import {
   QuestionMarkCircleIcon,
   BookOpenIcon,
@@ -28,6 +28,7 @@ import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const { user } = useUser();
+  const { signOut } = useClerk();
   const pathname = usePathname();
   const { color, initials } = avatarUtil(user?.fullName || "");
 
@@ -55,7 +56,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="flex justify-between items-center px-4 py-3 bg-card">
+    <nav className="flex justify-between items-center px-4 py-3 bg-card sticky top-0 z-10">
       <Link href={"/"}>
         <span className="flex items-center gap-1">
           <BookOpenIcon height={24} width={24} className="fill-primary" />
@@ -121,7 +122,11 @@ const Navbar = () => {
           })}
 
           {user && (
-            <SignOutButton>
+            <SignOutButton
+              signOutCallback={() => {
+                signOut();
+              }}
+            >
               <SheetClose>
                 <span className="flex items-center gap-4 mt-2 hover:underline pr-3 py-2 rounded-md">
                   <ArrowLeftStartOnRectangleIcon height={24} width={24} />

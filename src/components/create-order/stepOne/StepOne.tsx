@@ -16,7 +16,7 @@ import { Label } from "../../ui/label";
 import { Avatar, AvatarImage } from "../../ui/avatar";
 import Search from "@/components/Search";
 import { Button } from "@/components/ui/button";
-import { ArrowRightIcon } from "@heroicons/react/24/solid";
+import { ArrowPathIcon, ArrowRightIcon } from "@heroicons/react/24/solid";
 import { isEmpty } from "ramda";
 import { CustomerDetails, SizeList } from "@/utils/interfaces";
 import axiosConfig from "@/utils/axiosConfig";
@@ -31,11 +31,7 @@ import debounce from "lodash.debounce";
 import { useQuery, useMutation, useIsMutating } from "@tanstack/react-query";
 import { RadioGroup } from "@/components/ui/radio-group";
 import UserOption from "./UserOption";
-import {
-  getS3URL,
-  uploadImageToS3,
-  createNewCustomer,
-} from "@/utils/commonApi";
+import { uploadImageToS3, createNewCustomer } from "@/utils/commonApi";
 
 interface ApiDetails {
   id: string;
@@ -43,6 +39,13 @@ interface ApiDetails {
   offset: number;
   searchWord: string;
   setSelectedCustomerId: React.Dispatch<React.SetStateAction<string>>;
+}
+
+interface StepOneProps {
+  setCustomerDetails: React.Dispatch<
+    React.SetStateAction<CustomerDetails | undefined>
+  >;
+  setActiveStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
 // this will get the list of all the customers
@@ -83,7 +86,7 @@ const handleDebounce = debounce((refetch) => {
 
 const maxFileSize = 1024 * 1024 * 10;
 
-const StepOne = () => {
+const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
   const [size, setSize] = useState<number>(0);
   const [shirtList, setShirtList] = useState<SizeList[]>([]);
   const [pantSize, setPantSize] = useState<number>(0);
@@ -99,11 +102,14 @@ const StepOne = () => {
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const { userId } = useAuth();
   const btnRef = useRef(null);
-  const mutationCount = useIsMutating();
+  const isMutating = useIsMutating();
 
-  console.log({ mutationCount });
-
-  const { data, isLoading, isFetching, refetch } = useQuery({
+  const {
+    data: oldCustomersData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["old-customers-list"],
     queryFn: () =>
       getOldCustomersList({
@@ -114,11 +120,6 @@ const StepOne = () => {
         setSelectedCustomerId,
       }),
     enabled: false,
-  });
-
-  const { mutateAsync: s3UrlMutation } = useMutation({
-    mutationFn: getS3URL,
-    mutationKey: ["get-s3-url"],
   });
 
   const { mutateAsync: uploadImageMutation } = useMutation({
@@ -184,30 +185,22 @@ const StepOne = () => {
 
     // checking if user added photo or not
     if (imageFile) {
-      await s3UrlMutation(imageFile, {
-        onSuccess: (response) => {
-          imageURL = response?.data?.url;
+      await uploadImageMutation(
+        {
+          file: imageFile,
         },
-      });
+        {
+          onSuccess: (response) => {
+            console.log(response);
 
-      // checking for s3 presigned URL
-      if (!isEmpty(imageURL)) {
-        await uploadImageMutation(
-          {
-            file: imageFile,
-            url: imageURL,
+            imageURL = response?.data?.data;
           },
-          {
-            onSuccess: (response) => {
-              imageURL = response?.data?.data;
-            },
-            onError: (error) => {
-              console.log(error);
-              imageURL = "";
-            },
-          }
-        );
-      }
+          onError: (error) => {
+            console.log(error);
+            imageURL = "";
+          },
+        }
+      );
     }
 
     mutate(
@@ -222,7 +215,8 @@ const StepOne = () => {
       },
       {
         onSuccess: (response) => {
-          console.log(response?.data?.data);
+          setCustomerDetails(response?.data?.data);
+          setActiveStep(2);
         },
       }
     );
@@ -287,7 +281,7 @@ const StepOne = () => {
   };
 
   // triggered when old customers selected
-  const handleCustomerSelect = (id: string) => {
+  const handleValueChange = (id: string) => {
     setSelectedCustomerId(id);
     const submitBtn = btnRef.current;
 
@@ -297,6 +291,17 @@ const StepOne = () => {
         submitBtn.scrollIntoView({ behavior: "smooth" });
       }, 10);
     }
+  };
+
+  const handleCustomerSelect = () => {
+    const data = oldCustomersData.filter(
+      (details: CustomerDetails) => details.customerId === selectedCustomerId
+    );
+
+    console.log({ data });
+
+    setCustomerDetails(data);
+    setActiveStep(2);
   };
 
   return (
@@ -447,9 +452,22 @@ const StepOne = () => {
               )}
             </div>
 
-            <Button type="submit" onClick={validateSizeList} className="gap-1">
+            <Button
+              type="submit"
+              onClick={validateSizeList}
+              className="gap-1"
+              disabled={isMutating === 1}
+            >
               Create Customer
-              <ArrowRightIcon height={16} width={16} />
+              {isMutating ? (
+                <ArrowPathIcon
+                  height={20}
+                  width={20}
+                  className="animate-spin"
+                />
+              ) : (
+                <ArrowRightIcon height={16} width={16} />
+              )}
             </Button>
           </form>
         </Form>
@@ -466,21 +484,31 @@ const StepOne = () => {
 
         <RadioGroup
           value={selectedCustomerId}
-          onValueChange={handleCustomerSelect}
+          onValueChange={handleValueChange}
         >
-          {!isEmpty(data || [])
-            ? data?.map((details: CustomerDetails, index: number) => {
-                return <UserOption details={details} key={index} />;
-              })
+          {!isEmpty(oldCustomersData || [])
+            ? oldCustomersData?.map(
+                (details: CustomerDetails, index: number) => {
+                  return <UserOption details={details} key={index} />;
+                }
+              )
             : null}
         </RadioGroup>
 
-        {isEmpty(data || []) && !isLoading && !isFetching && data ? (
+        {isEmpty(oldCustomersData || []) &&
+        !isLoading &&
+        !isFetching &&
+        oldCustomersData ? (
           <p className="text-center">No results found!</p>
         ) : null}
 
         {!isEmpty(selectedCustomerId) && (
-          <Button type="submit" className="gap-1" ref={btnRef}>
+          <Button
+            type="submit"
+            className="gap-1"
+            ref={btnRef}
+            onClick={handleCustomerSelect}
+          >
             Create Order
             <ArrowRightIcon height={16} width={16} />
           </Button>

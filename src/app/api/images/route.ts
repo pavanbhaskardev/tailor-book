@@ -1,10 +1,8 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import sharp from "sharp";
 import { NextResponse, type NextRequest } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { auth } from "@clerk/nextjs";
-import axiosConfig from "@/utils/axiosConfig";
 
 const s3 = new S3Client({
   region: process.env.AWS_BUCKET_REGION!,
@@ -14,19 +12,19 @@ const s3 = new S3Client({
   },
 });
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
+  const fileData = await request.formData();
+  const file = fileData.getAll("file")[0] as File;
   const { userId } = auth();
-  const { searchParams } = new URL(request.url);
-  const fileSize = searchParams.get("fileSize") || 0;
-  const fileType = searchParams.get("fileType") || "";
+  const maxFileSize = 1024 * 1024 * 5;
+  const uniqueFileName = uuidv4();
+
   const allowedFileTypes = [
     "image/jpeg",
     "image/jpg",
     "image/png",
     "image/webp",
   ];
-
-  const maxFileSize = 1024 * 1024 * 10;
 
   // checking if the user is authenticated or not
   if (!userId) {
@@ -39,7 +37,7 @@ export async function GET(request: NextRequest) {
   }
 
   // added the max file size validation
-  if (+fileSize > maxFileSize) {
+  if (file.size > maxFileSize) {
     return NextResponse.json(
       { message: "File size greater than 10mb not allowed" },
       { status: 400 }
@@ -47,41 +45,12 @@ export async function GET(request: NextRequest) {
   }
 
   // added fileType validation
-  if (!allowedFileTypes.includes(fileType)) {
+  if (!allowedFileTypes.includes(file.type)) {
     return NextResponse.json(
-      { message: `File type: ${fileType} is not supported` },
+      { message: `File type: ${file.type} is not supported` },
       { status: 400 }
     );
   }
-
-  const putObject = new PutObjectCommand({
-    Bucket: process.env.AWS_BUCKET_NAME!,
-    Key: uuidv4(),
-    ContentType: fileType,
-    // ContentLength: +fileSize,
-    Metadata: {
-      userId,
-    },
-  });
-
-  try {
-    const signedUrl = await getSignedUrl(s3, putObject, { expiresIn: 60 });
-
-    return NextResponse.json(
-      {
-        url: signedUrl,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-export async function POST(request: NextRequest) {
-  const fileData = await request.formData();
-  const file = fileData.getAll("file")[0] as File;
-  const url = fileData.getAll("url")[0] as string;
 
   try {
     const buffer = await file.arrayBuffer(); // Convert file to Buffer
@@ -89,8 +58,8 @@ export async function POST(request: NextRequest) {
     // compressing the image for performance
     const image = sharp(buffer)
       .resize({
-        width: 200,
-        height: 200,
+        width: 400,
+        height: 400,
         fit: sharp.fit.cover,
         withoutEnlargement: true,
       })
@@ -99,21 +68,26 @@ export async function POST(request: NextRequest) {
     // converting the image to buffer format again
     const resizedBuffer = await image.toBuffer();
 
+    // changed from presigned URL to putObject
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_BUCKET_NAME!,
+      Key: uniqueFileName,
+      Body: resizedBuffer,
+      ContentType: file.type,
+      Metadata: {
+        userId,
+      },
+    });
+
     // uploading the resized image to s3
     try {
-      const response = await axiosConfig(url, {
-        method: "PUT",
-        data: resizedBuffer,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-
-      // sending the s3 URL in the response
-      const imageURl = response?.config?.url?.split("?")[0];
+      await s3.send(command);
 
       return NextResponse.json(
-        { message: "Successfully uploaded image to s3", data: imageURl },
+        {
+          message: "Successfully uploaded image to s3",
+          data: `${process.env.AWS_BUCKET_FULL_URL}${uniqueFileName}`,
+        },
         { status: 201 }
       );
     } catch (error) {

@@ -4,6 +4,7 @@ import StepOne from "@/components/create-order/stepOne/StepOne";
 import { UserIcon } from "@heroicons/react/16/solid";
 import { DocumentCheckIcon } from "@heroicons/react/16/solid";
 import { CheckIcon } from "@heroicons/react/16/solid";
+import { CustomerDetails } from "@/utils/interfaces";
 
 const allSteps = {
   1: {
@@ -18,7 +19,8 @@ const allSteps = {
 };
 
 const CreateOrder = () => {
-  const [activeStep, setActiveStep] = useState<number>(1);
+  const [activeStep, setActiveStep] = useState(1);
+  const [customerDetails, setCustomerDetails] = useState<CustomerDetails>();
 
   return (
     <section>
@@ -35,7 +37,7 @@ const CreateOrder = () => {
 
         <li
           className={`flex w-full items-center after:content-[''] after:w-full after:h-1 after:border-b after:border-4 after:inline-block ${
-            activeStep >= 2 ? "after:border-primary" : "after:border-input"
+            activeStep > 2 ? "after:border-primary" : "after:border-input"
           } `}
         >
           <span
@@ -62,7 +64,12 @@ const CreateOrder = () => {
         {allSteps[activeStep].description}
       </p>
 
-      <StepOne />
+      {activeStep === 1 && (
+        <StepOne
+          setCustomerDetails={setCustomerDetails}
+          setActiveStep={setActiveStep}
+        />
+      )}
     </section>
   );
 };

@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
+import { motion } from "framer-motion";
+import useMeasure from "react-use-measure";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import avatarUtil from "@/utils/avatarUtil";
@@ -11,6 +13,8 @@ import { formatSize } from "@/components/SizeDrawer";
 const UserOption = ({ details }: { details: CustomerDetails }) => {
   const [showMoreDetails, setShowMoreDetails] = useState(false);
   const { color, initials } = avatarUtil(details.name);
+  let [scope, { height }] = useMeasure();
+
   const shirtSizeList = details.shirtSize.map((size) => {
     const flooredSize = Math.floor(size);
 
@@ -55,9 +59,9 @@ const UserOption = ({ details }: { details: CustomerDetails }) => {
         </Button>
       </div>
 
-      <div>
+      <motion.div animate={{ height }}>
         {showMoreDetails ? (
-          <div className="mt-4 space-y-2 text-sm">
+          <div className="mt-4 space-y-2 text-sm" ref={scope}>
             <div>
               <span>Shirt size: </span>
               <span className="text-muted-foreground">
@@ -83,7 +87,7 @@ const UserOption = ({ details }: { details: CustomerDetails }) => {
             </div>
           </div>
         ) : null}
-      </div>
+      </motion.div>
     </div>
   );
 };

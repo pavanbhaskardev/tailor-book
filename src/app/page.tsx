@@ -13,7 +13,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-col grow-0 items-start justify-center px-5 gap-2 mt-5">
+    <main className="flex flex-col grow-0 items-start justify-center gap-2 mt-5">
       <h1 className="text-4xl text-pretty">
         Tailoring made <span className="text-primary">simple.</span>
       </h1>
