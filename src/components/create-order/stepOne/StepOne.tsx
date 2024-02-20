@@ -199,8 +199,7 @@ const StepOne = () => {
           },
           {
             onSuccess: (response) => {
-              const url = response?.config?.url || "";
-              imageURL = url.split("?")[0];
+              imageURL = response?.data?.data;
             },
             onError: (error) => {
               console.log(error);

@@ -43,6 +43,7 @@
     "react-hook-form": "^7.50.0",
     "react-infinite-scroll-component": "^6.1.0",
     "react-use-measure": "^2.1.1",
+    "sharp": "^0.33.2",
     "tailwind-merge": "^2.1.0",
     "tailwindcss-animate": "^1.0.7",
     "use-sound": "^4.0.1",

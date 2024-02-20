@@ -16,10 +16,14 @@ export const uploadImageToS3 = async ({
   file: File;
   url: string;
 }) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("url", url);
+
   return axiosConfig({
-    url,
-    method: "PUT",
-    data: file,
+    url: "api/images",
+    method: "POST",
+    data: formData,
     headers: {
       "Content-Type": file.type,
     },

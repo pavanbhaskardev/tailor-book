@@ -1,8 +1,10 @@
-import { auth } from "@clerk/nextjs";
-import { NextResponse, type NextRequest } from "next/server";
-import { v4 as uuidv4 } from "uuid";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import sharp from "sharp";
+import { NextResponse, type NextRequest } from "next/server";
+import { v4 as uuidv4 } from "uuid";
+import { auth } from "@clerk/nextjs";
+import axiosConfig from "@/utils/axiosConfig";
 
 const s3 = new S3Client({
   region: process.env.AWS_BUCKET_REGION!,
@@ -56,7 +58,7 @@ export async function GET(request: NextRequest) {
     Bucket: process.env.AWS_BUCKET_NAME!,
     Key: uuidv4(),
     ContentType: fileType,
-    ContentLength: +fileSize,
+    // ContentLength: +fileSize,
     Metadata: {
       userId,
     },
@@ -73,5 +75,61 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.log(error);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const fileData = await request.formData();
+  const file = fileData.getAll("file")[0] as File;
+  const url = fileData.getAll("url")[0] as string;
+
+  try {
+    const buffer = await file.arrayBuffer(); // Convert file to Buffer
+
+    // compressing the image for performance
+    const image = sharp(buffer)
+      .resize({
+        width: 200,
+        height: 200,
+        fit: sharp.fit.cover,
+        withoutEnlargement: true,
+      })
+      .jpeg();
+
+    // converting the image to buffer format again
+    const resizedBuffer = await image.toBuffer();
+
+    // uploading the resized image to s3
+    try {
+      const response = await axiosConfig(url, {
+        method: "PUT",
+        data: resizedBuffer,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      // sending the s3 URL in the response
+      const imageURl = response?.config?.url?.split("?")[0];
+
+      return NextResponse.json(
+        { message: "Successfully uploaded image to s3", data: imageURl },
+        { status: 201 }
+      );
+    } catch (error) {
+      console.log("failed to upload image to s3", error);
+
+      return NextResponse.json(
+        { message: "Failed to upload image to s3", error: error },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    console.log("failed to compress image", error);
+
+    return NextResponse.json(
+      { message: "Failed to compress image", error: error },
+      { status: 500 }
+    );
   }
 }
