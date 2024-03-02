@@ -42,9 +42,7 @@ interface ApiDetails {
 }
 
 interface StepOneProps {
-  setCustomerDetails: React.Dispatch<
-    React.SetStateAction<CustomerDetails | undefined>
-  >;
+  setCustomerDetails: React.Dispatch<React.SetStateAction<CustomerDetails>>;
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
@@ -84,7 +82,7 @@ const handleDebounce = debounce((refetch) => {
   refetch();
 }, 800);
 
-const maxFileSize = 1024 * 1024 * 10;
+const maxFileSize = 1024 * 1024 * 5;
 
 const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
   const [size, setSize] = useState<number>(0);
@@ -150,7 +148,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
   });
 
   // handling the validation for controlled inputs shirtSize & pantSize
-  const validateSizeList = async () => {
+  const validateSizeList = () => {
     if (isEmpty(shirtSizeList)) {
       setErrorStatus((current) => ({ ...current, shirtListStatus: true }));
     } else {
@@ -174,7 +172,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
     let imageURL = "";
 
     // not uploading data when shirt or pant size is empty
-    if (isEmpty(shirtSizeList) || isEmpty(pantSizeList) || !userId) {
+    if ((isEmpty(shirtSizeList) && isEmpty(pantSizeList)) || !userId) {
       return;
     }
 
@@ -209,8 +207,10 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
         number: values.phoneNumber,
         userId,
         customerId: uuidv4(),
-        shirtSize: shirtList.map(({ size }) => size),
-        pantSize: pantSizeList.map(({ size }) => size),
+        shirtSize: !isEmpty(shirtList) ? shirtList.map(({ size }) => size) : [],
+        pantSize: !isEmpty(pantSizeList)
+          ? pantSizeList.map(({ size }) => size)
+          : [],
         customerPhoto: imageURL,
       },
       {
@@ -295,10 +295,8 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
 
   const handleCustomerSelect = () => {
     const data = oldCustomersData.filter(
-      (details: CustomerDetails) => details.customerId === selectedCustomerId
-    );
-
-    console.log({ data });
+      (details: CustomerDetails) => details?.customerId === selectedCustomerId
+    )[0];
 
     setCustomerDetails(data);
     setActiveStep(2);
@@ -365,7 +363,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
                 </Avatar>
                 <Input
                   type="file"
-                  capture="user"
+                  capture="environment"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleImageChange}
                 />
@@ -373,7 +371,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
 
               {errorStatus.imageSizeStatus && (
                 <FormDescription className="text-destructive">
-                  File size can&apos;t be greater than 10MB
+                  File size can&apos;t be greater than 5MB
                 </FormDescription>
               )}
             </div>
@@ -381,7 +379,9 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
             <div className="flex flex-col gap-3">
               <Label
                 className={`${
-                  errorStatus.shirtListStatus ? "text-destructive" : ""
+                  errorStatus.pantSizeListStatus && errorStatus.shirtListStatus
+                    ? "text-destructive"
+                    : ""
                 }`}
               >
                 Shirt Size
@@ -408,17 +408,14 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
                   </Button>
                 </SizeDrawer>
               </div>
-              {errorStatus.shirtListStatus && (
-                <FormDescription className="text-destructive">
-                  Shirt list can&apos;t be empty
-                </FormDescription>
-              )}
             </div>
 
             <div className="flex flex-col gap-3">
               <Label
                 className={`${
-                  errorStatus.pantSizeListStatus ? "text-destructive" : ""
+                  errorStatus.pantSizeListStatus && errorStatus.shirtListStatus
+                    ? "text-destructive"
+                    : ""
                 }`}
               >
                 Pant Size
@@ -445,11 +442,12 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
                   </Button>
                 </SizeDrawer>
               </div>
-              {errorStatus.pantSizeListStatus && (
-                <FormDescription className="text-destructive">
-                  Pant list can&apos;t be empty
-                </FormDescription>
-              )}
+              {errorStatus.pantSizeListStatus &&
+                errorStatus.shirtListStatus && (
+                  <FormDescription className="text-destructive">
+                    Shirt & Pant both lists can&apos;t be empty
+                  </FormDescription>
+                )}
             </div>
 
             <Button
@@ -502,17 +500,17 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
           <p className="text-center">No results found!</p>
         ) : null}
 
-        {!isEmpty(selectedCustomerId) && (
-          <Button
-            type="submit"
-            className="gap-1"
-            ref={btnRef}
-            onClick={handleCustomerSelect}
-          >
-            Create Order
-            <ArrowRightIcon height={16} width={16} />
-          </Button>
-        )}
+        <Button
+          type="submit"
+          className={`gap-1 ${
+            !isEmpty(selectedCustomerId) ? "flex" : "hidden"
+          }`}
+          ref={btnRef}
+          onClick={handleCustomerSelect}
+        >
+          Create Order
+          <ArrowRightIcon height={16} width={16} />
+        </Button>
       </TabsContent>
     </Tabs>
   );

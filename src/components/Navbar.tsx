@@ -18,7 +18,7 @@ import {
   SheetHeader,
 } from "@/components/ui/sheet";
 import { Button } from "./ui/button";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import {
   QuestionMarkCircleIcon,
   BookOpenIcon,
@@ -28,7 +28,6 @@ import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const { user } = useUser();
-  const { signOut } = useClerk();
   const pathname = usePathname();
   const { color, initials } = avatarUtil(user?.fullName || "");
 
@@ -74,7 +73,7 @@ const Navbar = () => {
           {user ? (
             <div className="grid ">
               <SheetHeader>
-                <Avatar className="h-11 w-11 mb-2 ">
+                <Avatar className="h-11 w-11 mb-2">
                   <AvatarImage
                     src={user?.imageUrl}
                     alt={user?.fullName || ""}
@@ -122,11 +121,7 @@ const Navbar = () => {
           })}
 
           {user && (
-            <SignOutButton
-              signOutCallback={() => {
-                signOut();
-              }}
-            >
+            <SignOutButton>
               <SheetClose>
                 <span className="flex items-center gap-4 mt-2 hover:underline pr-3 py-2 rounded-md">
                   <ArrowLeftStartOnRectangleIcon height={24} width={24} />

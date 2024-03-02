@@ -3,7 +3,7 @@ export interface SizeList {
   id: string;
 }
 
-export interface CustomerDetails {
+export type CustomerDetails = {
   userId: string;
   customerId: string;
   name: string;
@@ -11,4 +11,4 @@ export interface CustomerDetails {
   shirtSize: number[];
   pantSize: number[];
   customerPhoto: string;
-}
+};

@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 import connectMongoDB from "@/lib/mongoDB";
 import { Customer } from "@/models/customer";
 
+interface Query {
+  name?: { $regex: string; $options: string };
+  $expr?: { $regexMatch: { input: { $toString: string }; regex: RegExp } };
+}
+
 // to get the customer list
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,6 +17,8 @@ export async function GET(request: Request) {
   const limitValue = limit ? +limit : 10;
   const offsetValue = offset ? +offset : 0;
   const searchWord = searchParams.get("searchWord") || "";
+  let query: Query = {};
+  const regex = /^[0-9]+$/;
 
   // added the case
   if (!id) {
@@ -23,13 +30,24 @@ export async function GET(request: Request) {
     );
   }
 
+  if (regex.test(searchWord)) {
+    query.$expr = {
+      $regexMatch: {
+        input: { $toString: "$number" },
+        regex: new RegExp(searchWord),
+      },
+    };
+  } else {
+    query.name = { $regex: searchWord, $options: "i" };
+  }
+
   // connects to MongoDB
   await connectMongoDB();
 
   try {
     const response = await Customer.find({
       userId: id,
-      name: { $regex: searchWord, $options: "i" },
+      ...query,
     })
       .limit(limitValue)
       .skip(offsetValue * limitValue);
@@ -61,21 +79,25 @@ export async function POST(request: Request) {
     );
   }
 
-  console.log(customerDetails);
-
   // connects to MongoDB
   await connectMongoDB();
 
   try {
-    const response = await Customer.create({
-      userId: customerDetails.userId,
-      customerId: customerDetails.customerId,
-      name: customerDetails.name,
-      number: customerDetails.number,
-      shirtSize: customerDetails.shirtSize,
-      pantSize: customerDetails.pantSize,
-      customerPhoto: customerDetails.customerPhoto,
-    });
+    const response = await Customer.findOneAndUpdate(
+      { customerId: customerDetails.customerId },
+      {
+        userId: customerDetails.userId,
+        customerId: customerDetails.customerId,
+        name: customerDetails.name,
+        number: customerDetails.number,
+        shirtSize: customerDetails.shirtSize,
+        pantSize: customerDetails.pantSize,
+        customerPhoto: customerDetails.customerPhoto,
+      },
+      { upsert: true, new: true }
+    );
+
+    console.log({ response });
 
     return NextResponse.json(
       { message: "Successfully created customer", data: response },

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { dark } from "@clerk/themes";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
-import { dark } from "@clerk/themes";
 import QueryProvider from "@/components/QueryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -41,6 +42,7 @@ export default function RootLayout({
               <Navbar />
               <main className="px-4 my-3">{children}</main>
             </QueryProvider>
+            <Toaster richColors />
           </ThemeProvider>
         </body>
       </html>
