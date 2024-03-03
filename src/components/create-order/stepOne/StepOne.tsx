@@ -186,6 +186,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
       await uploadImageMutation(
         {
           file: imageFile,
+          imageCompression: "resize",
         },
         {
           onSuccess: (response) => {
@@ -445,7 +446,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
               {errorStatus.pantSizeListStatus &&
                 errorStatus.shirtListStatus && (
                   <FormDescription className="text-destructive">
-                    Shirt & Pant both lists can&apos;t be empty
+                    Shirt or Pant list is required
                   </FormDescription>
                 )}
             </div>

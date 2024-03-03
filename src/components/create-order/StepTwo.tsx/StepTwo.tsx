@@ -6,11 +6,13 @@ import {
   ChevronLeftIcon,
   CalendarIcon,
 } from "@heroicons/react/16/solid";
-import { isEmpty } from "ramda";
+import { isEmpty, equals } from "ramda";
 import { v4 as uuidv4 } from "uuid";
 import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { format, endOfToday } from "date-fns";
 import { toast } from "sonner";
+import useSound from "use-sound";
+import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -26,35 +28,50 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Form, FormDescription } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { uploadImageToS3 } from "@/utils/commonApi";
+import { createNewOrder } from "@/utils/commonApi";
 
-type stepTwoType = {
+type StepTwoType = {
   customerDetails: CustomerDetails;
   setCustomerDetails: React.Dispatch<React.SetStateAction<CustomerDetails>>;
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+};
+
+type FileUrlType = {
+  url: string;
+  id: string;
+};
+
+type FileListType = {
+  file: File;
+  id: string;
 };
 
 const variants = {
   initial: {
     y: "20px",
     opacity: 0,
+    scale: 0.75,
   },
   animate: {
     y: 0,
     opacity: 1,
+    scale: 1,
   },
   exit: {
     opacity: 0,
-    scale: 0,
+    scale: 0.5,
   },
 };
+
+const maxFileSize = 1024 * 1024 * 5;
 
 const StepTwo = ({
   customerDetails,
   setCustomerDetails,
   setActiveStep,
-}: stepTwoType) => {
+}: StepTwoType) => {
   const [shirtSize, setShirtSize] = useState(0);
   const [shirtList, setShirtList] = useState<SizeList[]>(
     customerDetails?.shirtSize.map((size) => ({
@@ -73,15 +90,26 @@ const StepTwo = ({
   const [shirtCount, setShirtCount] = useState(0);
   const [pantCount, setPantCount] = useState(0);
   const [errorStatus, setErrorStatus] = useState({
-    shirtListStatus: false,
     pantSizeListStatus: false,
+    shirtSizeListStatus: false,
     imageSizeStatus: false,
     clothesCountStatus: false,
     imageCountStatus: false,
     dateStatus: false,
   });
-  const [filesList, setFilesList] = useState<File[]>([]);
-  const [filesURL, setFilesURL] = useState<string[]>([]);
+  const [filesList, setFilesList] = useState<FileListType[]>([]);
+  const [filesURL, setFilesURL] = useState<FileUrlType[]>([]);
+  const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
+
+  const { mutateAsync: uploadImageMutation } = useMutation({
+    mutationFn: uploadImageToS3,
+    mutationKey: ["upload-to-s3"],
+  });
+
+  const { mutate: createOrderMutation } = useMutation({
+    mutationFn: createNewOrder,
+    mutationKey: ["create-new-order"],
+  });
 
   // removing the created objectURL's
   useEffect(() => {
@@ -113,42 +141,137 @@ const StepTwo = ({
     if (files) {
       const keys = Object.keys(files);
       let filesLength = filesList.length;
-      const imageFiles: File[] = [];
+      const imageFiles: FileListType[] = [];
 
       if (filesList.length === 3) {
         return toast.error("Maximum of 3 images allowed per order.");
       } else {
-        const imageURL: string[] = [];
+        const imageURL: FileUrlType[] = [];
+        let showMaxSizeToaster = false;
 
         keys.forEach((key) => {
           if (filesLength < 3) {
-            imageFiles.push(files[+key]);
-            imageURL.push(URL.createObjectURL(files[+key]));
-            filesLength += 1;
+            if (files[+key].size > maxFileSize) {
+              showMaxSizeToaster = true;
+            } else {
+              const id = uuidv4();
+              imageFiles.push({ file: files[+key], id });
+              imageURL.push({
+                url: URL.createObjectURL(files[+key]),
+                id,
+              });
+
+              filesLength += 1;
+            }
           }
         });
 
+        if (showMaxSizeToaster) {
+          toast.error("Maximum file size is 5MB");
+        }
+
         setFilesURL((current) => [...current, ...imageURL]);
         setFilesList((current) => [...current, ...imageFiles]);
+        if (errorStatus.imageCountStatus) {
+          setErrorStatus((current) => ({
+            ...current,
+            imageCountStatus: false,
+          }));
+        }
       }
     }
   };
 
-  const removeFile = (id: number) => {
-    const objectURL = filesURL[id];
-    const files = filesList.filter((details, index) => index !== id);
-    const urls = filesURL.filter((details, index) => index !== id);
+  const removeFile = (id: string) => {
+    const objectURL = filesURL.filter((urlDetails) => urlDetails.id === id)[0]
+      .url;
+    const files = filesList.filter((details) => details.id !== id);
+    const urls = filesURL.filter((details) => details.id !== id);
 
     setFilesList(files);
     setFilesURL(urls);
     URL.revokeObjectURL(objectURL);
+    play();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // setting the error states
     setErrorStatus((current) => ({
       ...current,
       clothesCountStatus: shirtCount === 0 && pantCount === 0,
+      dateStatus: date === undefined,
+      imageCountStatus: isEmpty(filesList),
+      pantSizeListStatus: pantCount >= 1 && isEmpty(pantList),
+      shirtSizeListStatus: shirtCount >= 1 && isEmpty(shirtList),
     }));
+
+    // returning if any validation not met
+    if (
+      (shirtCount !== 0 || pantCount !== 0) &&
+      date !== undefined &&
+      !isEmpty(filesList)
+    ) {
+      if (
+        (pantCount >= 1 && isEmpty(pantList)) ||
+        (shirtCount >= 1 && isEmpty(shirtList))
+      ) {
+        return;
+      }
+
+      let imageURLs: string[] = [];
+      for (const details of filesList) {
+        await uploadImageMutation(
+          {
+            file: details.file,
+            imageCompression: "compress",
+          },
+          {
+            onSuccess: (response) => {
+              console.log(response?.data?.data);
+              imageURLs.push(response?.data?.data);
+            },
+            onError: (error) => {
+              console.log(error);
+              imageURLs.push("");
+            },
+          }
+        );
+      }
+
+      const shirtSizeList = shirtList.map((details) => details.size);
+      const pantSizeList = pantList.map((details) => details.size);
+
+      const newShirtSize = equals(customerDetails.shirtSize, shirtSizeList)
+        ? {}
+        : { newShirtSize: shirtSizeList };
+      const newPantSize = equals(customerDetails.pantSize, pantSizeList)
+        ? {}
+        : { newShirtSize: pantSizeList };
+
+      const payload = {
+        userId: customerDetails.userId,
+        customerId: customerDetails.customerId,
+        customerDetails: customerDetails._id,
+        orderId: uuidv4(),
+        status: "todo",
+        orderPhotos: imageURLs,
+        deliveryDate: date,
+        description: "",
+        ...newShirtSize,
+        ...newPantSize,
+        shirtCount,
+        pantCount,
+      };
+
+      createOrderMutation(payload, {
+        onSuccess: (response) => {
+          console.log(response);
+        },
+        onError: (error) => {
+          console.log(error);
+        },
+      });
+    }
   };
 
   return (
@@ -176,7 +299,9 @@ const StepTwo = ({
       {/* customer shirt list */}
       <div className="flex flex-col gap-3">
         <Label
-          className={`${errorStatus.shirtListStatus ? "text-destructive" : ""}`}
+          className={`${
+            errorStatus.shirtSizeListStatus ? "text-destructive" : ""
+          }`}
         >
           Shirt Size
         </Label>
@@ -195,7 +320,14 @@ const StepTwo = ({
             setSize={setShirtSize}
             sizeList={shirtList}
             setSizeList={setShirtList}
-            onDrawerClose={() => {}}
+            onDrawerClose={() => {
+              if (!isEmpty(shirtList) && errorStatus.shirtSizeListStatus) {
+                setErrorStatus((current) => ({
+                  ...current,
+                  shirtSizeListStatus: false,
+                }));
+              }
+            }}
           >
             <Button type="button" variant="secondary" size="icon">
               <PlusIcon height={16} width={16} />
@@ -203,11 +335,11 @@ const StepTwo = ({
           </SizeDrawer>
         </div>
 
-        {/* {errorStatus.shirtListStatus && (
-          <FormDescription className="text-destructive">
+        {errorStatus.shirtSizeListStatus && (
+          <p className="text-[0.8rem] font-medium text-destructive">
             Shirt list can&apos;t be empty
-          </FormDescription>
-        )} */}
+          </p>
+        )}
       </div>
 
       {/* customer pant list */}
@@ -234,7 +366,14 @@ const StepTwo = ({
             setSize={setPantSize}
             sizeList={pantList}
             setSizeList={setPantList}
-            onDrawerClose={() => {}}
+            onDrawerClose={() => {
+              if (!isEmpty(pantList) && errorStatus.pantSizeListStatus) {
+                setErrorStatus((current) => ({
+                  ...current,
+                  pantSizeListStatus: false,
+                }));
+              }
+            }}
           >
             <Button type="button" variant="secondary" size="icon">
               <PlusIcon height={16} width={16} />
@@ -242,16 +381,16 @@ const StepTwo = ({
           </SizeDrawer>
         </div>
 
-        {/* {errorStatus.pantSizeListStatus && (
-          <FormDescription className="text-destructive">
-            Shirt list can&apos;t be empty
-          </FormDescription>
-        )} */}
+        {errorStatus.pantSizeListStatus && (
+          <p className="text-[0.8rem] font-medium text-destructive">
+            Pant list can&apos;t be empty
+          </p>
+        )}
       </div>
 
       {/* shirt & pant count addition */}
-      <div className="flex gap-3">
-        <div className="flex flex-col gap-3 w-1/2">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3">
           <Label
             className={`${
               errorStatus.clothesCountStatus ? "text-destructive" : ""
@@ -299,6 +438,13 @@ const StepTwo = ({
                 setShirtCount((value) => {
                   return value + 1;
                 });
+
+                if (errorStatus.clothesCountStatus && shirtCount + 1 > 0) {
+                  setErrorStatus((current) => ({
+                    ...current,
+                    clothesCountStatus: false,
+                  }));
+                }
               }}
             >
               <PlusIcon height={16} width={16} />
@@ -306,7 +452,7 @@ const StepTwo = ({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 w-1/2">
+        <div className="flex flex-col gap-3">
           <Label
             className={`${
               errorStatus.clothesCountStatus ? "text-destructive" : ""
@@ -354,6 +500,13 @@ const StepTwo = ({
                 setPantCount((value) => {
                   return value + 1;
                 });
+
+                if (errorStatus.clothesCountStatus && pantCount + 1 > 0) {
+                  setErrorStatus((current) => ({
+                    ...current,
+                    clothesCountStatus: false,
+                  }));
+                }
               }}
             >
               <PlusIcon height={16} width={16} />
@@ -361,13 +514,14 @@ const StepTwo = ({
           </div>
         </div>
 
-        {/* {errorStatus.clothesCountStatus && (
-          <FormDescription className="text-destructive">
-            Shirt & Pant count can&apos;t be empty
-          </FormDescription>
-        )} */}
+        {errorStatus.clothesCountStatus && (
+          <p className="text-[0.8rem] font-medium text-destructive col-span-2">
+            Shirt or Pant count is required
+          </p>
+        )}
       </div>
 
+      {/* Delivery date */}
       <div className="flex flex-col gap-3">
         <Label
           className={`${errorStatus.dateStatus ? "text-destructive" : ""}`}
@@ -392,58 +546,82 @@ const StepTwo = ({
             <Calendar
               mode="single"
               selected={date}
-              onSelect={setDate}
+              onSelect={(date) => {
+                setDate(date);
+
+                if (errorStatus.dateStatus) {
+                  setErrorStatus((current) => ({
+                    ...current,
+                    dateStatus: date === undefined,
+                  }));
+                }
+              }}
               initialFocus
               disabled={(current) => endOfToday() > current}
             />
           </PopoverContent>
         </Popover>
 
-        {/* {errorStatus.dateStatus && (
-          <FormDescription className="text-destructive">
-            Date can&apos;t be empty
-          </FormDescription>
-        )} */}
+        {errorStatus.dateStatus && (
+          <p className="text-[0.8rem] font-medium text-destructive">
+            Delivery date is required
+          </p>
+        )}
       </div>
 
+      {/* user note */}
       <div className="flex flex-col gap-3">
         <Label>Note</Label>
         <Textarea />
       </div>
 
-      <Label
-        htmlFor="dropzone-file"
-        className="cursor-pointer flex flex-col items-center justify-center w-full border border-input rounded-sm"
-      >
-        <div className="flex flex-col items-center justify-center pt-5 pb-6 gap-3 text-muted-foreground">
-          <ArrowUpTrayIcon height={24} width={24} />
+      {/* shirt & pant count */}
+      <div className="flex flex-col gap-3">
+        <Label
+          htmlFor="dropzone-file"
+          className="cursor-pointer flex flex-col items-center justify-center w-full border border-input rounded-sm"
+        >
+          <div className="flex flex-col items-center justify-center pt-5 pb-6 gap-3 text-muted-foreground">
+            <ArrowUpTrayIcon height={24} width={24} />
 
-          <p className="text-sm">
-            <span className="font-semibold">Click to upload</span> or drag and
-            drop
+            <p className="text-sm">
+              <span className="font-semibold">Click to upload</span> or drag and
+              drop
+            </p>
+
+            <p className="text-xs">Max image size is 5MB</p>
+          </div>
+
+          <input
+            id="dropzone-file"
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </Label>
+
+        {errorStatus.imageCountStatus && (
+          <p className="text-[0.8rem] font-medium text-destructive">
+            Please add image of the clothes for better tracking
           </p>
+        )}
+      </div>
 
-          <p className="text-xs">Max image size is 5MB</p>
-        </div>
-
-        <input
-          id="dropzone-file"
-          type="file"
-          accept="image/jpeg,image/jpg,image/png,image/webp"
-          multiple
-          onChange={handleFileChange}
-          className="hidden"
-        />
-      </Label>
-
+      {/* images of the clothes */}
       <div className="flex flex-col gap-y-2">
         <AnimatePresence>
           {!isEmpty(filesList)
-            ? filesList.map((file, index) => {
+            ? filesList.map((details, index) => {
+                const url = filesURL.filter(
+                  (urlDetails) => urlDetails.id === details.id
+                )[0].url;
+
                 return (
                   <motion.div
                     className="border border-input p-5 rounded-sm flex justify-between items-center gap-2 w-full"
-                    key={index}
+                    key={details.id}
                     variants={variants}
                     initial="initial"
                     animate="animate"
@@ -456,23 +634,23 @@ const StepTwo = ({
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={filesURL[index]}
+                      src={url}
                       className="h-20 w-28 object-cover rounded-sm"
-                      alt={file.name}
+                      alt={details.file.name}
                     />
 
                     <p
                       className="text-sm whitespace-nowrap text-ellipsis overflow-hidden"
                       title="Image name.png"
                     >
-                      {file.name}
+                      {details.file.name}
                     </p>
 
                     <Button
                       size="icon"
                       variant="secondary"
                       className="flex-none"
-                      onClick={() => removeFile(index)}
+                      onClick={() => removeFile(details.id)}
                     >
                       <XMarkIcon height={16} width={16} />
                     </Button>
@@ -483,6 +661,7 @@ const StepTwo = ({
         </AnimatePresence>
       </div>
 
+      {/* continue & back btn */}
       <div className="flex w-full justify-between items-center">
         <Button
           variant="secondary"
@@ -497,6 +676,7 @@ const StepTwo = ({
               shirtSize: [],
               pantSize: [],
               customerPhoto: "",
+              _id: "",
             });
           }}
         >

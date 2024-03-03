@@ -11,4 +11,18 @@ export type CustomerDetails = {
   shirtSize: number[];
   pantSize: number[];
   customerPhoto: string;
+  _id: string;
+};
+
+export type OrderDetailsType = {
+  userId: string;
+  customerId: string;
+  customerDetails: string;
+  orderId: string;
+  status: string;
+  orderPhotos: string[];
+  deliveryDate: Date;
+  description?: string;
+  newShirtSize?: number[];
+  newPantSize?: number[];
 };

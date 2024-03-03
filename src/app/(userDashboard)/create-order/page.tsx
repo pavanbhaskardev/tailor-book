@@ -18,6 +18,7 @@ const CreateOrder = () => {
     shirtSize: [],
     pantSize: [],
     customerPhoto: "",
+    _id: "",
   });
   const stepsContainerRef = useRef(null);
 

@@ -12,11 +12,13 @@ const s3 = new S3Client({
   },
 });
 
+const maxFileSize = 1024 * 1024 * 5;
+
 export async function POST(request: NextRequest) {
   const fileData = await request.formData();
   const file = fileData.getAll("file")[0] as File;
+  const imageCompression = fileData.get("imageCompression") as string;
   const { userId } = auth();
-  const maxFileSize = 1024 * 1024 * 5;
   const uniqueFileName = uuidv4();
 
   const allowedFileTypes = [
@@ -53,20 +55,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const buffer = await file.arrayBuffer(); // Convert file to Buffer
+    const arrayBuffer = await file.arrayBuffer(); // Convert file to Buffer
+    let resizedImage;
 
-    // compressing the image for performance
-    const image = sharp(buffer)
-      .resize({
-        width: 400,
-        height: 400,
-        fit: sharp.fit.cover,
-        withoutEnlargement: true,
-      })
-      .jpeg();
+    if (imageCompression === "resize") {
+      // compressing the image for performance
+      resizedImage = sharp(arrayBuffer)
+        .resize({
+          width: 400,
+          height: 400,
+          fit: sharp.fit.cover,
+          withoutEnlargement: true,
+        })
+        .jpeg();
+    } else if (imageCompression === "compress") {
+      resizedImage = sharp(arrayBuffer).jpeg({ quality: 85 });
+    }
 
     // converting the image to buffer format again
-    const resizedBuffer = await image.toBuffer();
+    const resizedBuffer = await resizedImage.toBuffer();
 
     // changed from presigned URL to putObject
     const command = new PutObjectCommand({

@@ -9,6 +9,7 @@ import avatarUtil from "@/utils/avatarUtil";
 import { CustomerDetails } from "@/utils/interfaces";
 import { RadioGroupItem } from "@/components/ui/radio-group";
 import { formatSize } from "@/components/SizeDrawer";
+import { isEmpty } from "ramda";
 
 const UserOption = ({ details }: { details: CustomerDetails }) => {
   const [showMoreDetails, setShowMoreDetails] = useState(false);
@@ -62,29 +63,33 @@ const UserOption = ({ details }: { details: CustomerDetails }) => {
       <motion.div animate={{ height }}>
         {showMoreDetails ? (
           <div className="mt-4 space-y-2 text-sm" ref={scope}>
-            <div>
-              <span>Shirt size: </span>
-              <span className="text-muted-foreground">
-                {shirtSizeList.map(({ size, quarter }, index) => (
-                  <span key={index}>
-                    {size} <sup>{quarter}</sup>
-                    {index !== shirtSizeList.length - 1 ? ", " : ""}
-                  </span>
-                ))}
-              </span>
-            </div>
+            {!isEmpty(shirtSizeList) && (
+              <div>
+                <span>Shirt size: </span>
+                <span className="text-muted-foreground">
+                  {shirtSizeList.map(({ size, quarter }, index) => (
+                    <span key={index}>
+                      {size} <sup>{quarter}</sup>
+                      {index !== shirtSizeList.length - 1 ? ", " : ""}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
 
-            <div>
-              <span>Pant size: </span>
-              <span className="text-muted-foreground">
-                {pantSizeList.map(({ size, quarter }, index) => (
-                  <span key={index}>
-                    {size} <sup>{quarter}</sup>
-                    {index !== pantSizeList.length - 1 ? ", " : ""}
-                  </span>
-                ))}
-              </span>
-            </div>
+            {!isEmpty(pantSizeList) && (
+              <div>
+                <span>Pant size: </span>
+                <span className="text-muted-foreground">
+                  {pantSizeList.map(({ size, quarter }, index) => (
+                    <span key={index}>
+                      {size} <sup>{quarter}</sup>
+                      {index !== pantSizeList.length - 1 ? ", " : ""}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
           </div>
         ) : null}
       </motion.div>

@@ -1,10 +1,18 @@
 import axiosConfig from "./axiosConfig";
 import { CustomerDetails } from "./interfaces";
+import { OrderDetailsType } from "./interfaces";
 
 // Uploads the image to the s3 and return the image URL
-export const uploadImageToS3 = async ({ file }: { file: File }) => {
+export const uploadImageToS3 = async ({
+  file,
+  imageCompression,
+}: {
+  file: File;
+  imageCompression: string;
+}) => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("imageCompression", imageCompression);
 
   return axiosConfig({
     url: "api/images",
@@ -26,7 +34,7 @@ export const createNewCustomer = async ({
   customerPhoto,
 }: CustomerDetails) => {
   return axiosConfig({
-    url: "/api/customer",
+    url: "api/customer",
     method: "POST",
     data: {
       userId,
@@ -37,5 +45,13 @@ export const createNewCustomer = async ({
       pantSize,
       customerPhoto,
     },
+  });
+};
+
+export const createNewOrder = async (payload: OrderDetailsType) => {
+  return axiosConfig({
+    url: "api/order",
+    method: "POST",
+    data: payload,
   });
 };

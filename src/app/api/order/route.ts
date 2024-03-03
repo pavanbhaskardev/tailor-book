@@ -20,6 +20,18 @@ export async function POST(request: Request) {
   // connects to MongoDB
   await connectMongoDB();
 
+  const newShirtSize = orderDetails?.newShirtSize
+    ? {
+        newShirtSize: orderDetails?.newShirtSize,
+      }
+    : {};
+
+  const newPantSize = orderDetails?.newPantSize
+    ? {
+        newPantSize: orderDetails?.newPantSize,
+      }
+    : {};
+
   try {
     const response = await Order.findOneAndUpdate(
       { orderId: orderDetails.orderId },
@@ -29,9 +41,13 @@ export async function POST(request: Request) {
         customerDetails: orderDetails.customerObjectId,
         orderId: orderDetails.orderId,
         status: orderDetails.status,
-        orderPhotos: orderDetails.photos,
+        orderPhotos: orderDetails.orderPhotos,
         deliveryDate: orderDetails.deliveryDate,
         description: orderDetails.description,
+        ...newPantSize,
+        ...newShirtSize,
+        shirtCount: orderDetails.shirtCount,
+        pantCount: orderDetails.pantCount,
       },
       {
         upsert: true,
