@@ -1,12 +1,13 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import StepOne from "@/components/create-order/stepOne/StepOne";
-import StepTwo from "@/components/create-order/StepTwo.tsx/StepTwo";
 import { UserIcon } from "@heroicons/react/16/solid";
 import { DocumentCheckIcon } from "@heroicons/react/16/solid";
 import { CheckIcon } from "@heroicons/react/16/solid";
-import { CustomerDetails } from "@/utils/interfaces";
 import { AnimatePresence, motion } from "framer-motion";
+import StepOne from "@/components/create-order/stepOne/StepOne";
+import StepTwo from "@/components/create-order/stepTwo/StepTwo";
+import StepThree from "@/components/create-order/stepThree/StepThree";
+import { CustomerDetails, OrderDetailsType } from "@/utils/interfaces";
 
 const CreateOrder = () => {
   const [activeStep, setActiveStep] = useState(1);
@@ -20,8 +21,22 @@ const CreateOrder = () => {
     customerPhoto: "",
     _id: "",
   });
+  const [orderDetails, setOrderDetails] = useState<OrderDetailsType>({
+    userId: "",
+    customerId: "",
+    customerDetails: "",
+    orderId: "",
+    status: "",
+    orderPhotos: [],
+    deliveryDate: new Date(),
+    description: "",
+    newShirtSize: [],
+    newPantSize: [],
+  });
+
   const stepsContainerRef = useRef(null);
 
+  // scrolling to top when when changes between steps
   useEffect(() => {
     const container = stepsContainerRef.current;
 
@@ -56,7 +71,7 @@ const CreateOrder = () => {
       description: "Order details",
     },
     3: {
-      description: "Confirmation",
+      description: "Order created successfully",
     },
   };
 
@@ -73,11 +88,20 @@ const CreateOrder = () => {
         <StepTwo
           customerDetails={customerDetails}
           setCustomerDetails={setCustomerDetails}
+          setOrderDetails={setOrderDetails}
           setActiveStep={setActiveStep}
         />
       );
     } else if (activeStep === 3) {
-      return <p>Step 3</p>;
+      return (
+        <StepThree
+          setActiveStep={setActiveStep}
+          customerDetails={customerDetails}
+          setCustomerDetails={setCustomerDetails}
+          orderDetails={orderDetails}
+          setOrderDetails={setOrderDetails}
+        />
+      );
     }
   };
 

@@ -5,6 +5,8 @@ import {
   MinusIcon,
   ChevronLeftIcon,
   CalendarIcon,
+  ArrowPathIcon,
+  ArrowRightIcon,
 } from "@heroicons/react/16/solid";
 import { isEmpty, equals } from "ramda";
 import { v4 as uuidv4 } from "uuid";
@@ -12,12 +14,16 @@ import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { format, endOfToday } from "date-fns";
 import { toast } from "sonner";
 import useSound from "use-sound";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useIsMutating } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CustomerDetails, SizeList } from "@/utils/interfaces";
+import {
+  CustomerDetails,
+  OrderDetailsType,
+  SizeList,
+} from "@/utils/interfaces";
 import SizeDrawer, { formatSize } from "@/components/SizeDrawer";
 import avatarUtil from "@/utils/avatarUtil";
 import { AvatarFallback, AvatarImage, Avatar } from "@/components/ui/avatar";
@@ -36,6 +42,7 @@ type StepTwoType = {
   customerDetails: CustomerDetails;
   setCustomerDetails: React.Dispatch<React.SetStateAction<CustomerDetails>>;
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
+  setOrderDetails: React.Dispatch<React.SetStateAction<OrderDetailsType>>;
 };
 
 type FileUrlType = {
@@ -71,6 +78,7 @@ const StepTwo = ({
   customerDetails,
   setCustomerDetails,
   setActiveStep,
+  setOrderDetails,
 }: StepTwoType) => {
   const [shirtSize, setShirtSize] = useState(0);
   const [shirtList, setShirtList] = useState<SizeList[]>(
@@ -99,6 +107,8 @@ const StepTwo = ({
   });
   const [filesList, setFilesList] = useState<FileListType[]>([]);
   const [filesURL, setFilesURL] = useState<FileUrlType[]>([]);
+  const [note, setNote] = useState("");
+  const isMutating = useIsMutating();
   const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
 
   const { mutateAsync: uploadImageMutation } = useMutation({
@@ -167,7 +177,7 @@ const StepTwo = ({
         });
 
         if (showMaxSizeToaster) {
-          toast.error("Maximum file size is 5MB");
+          toast.error("Maximum file size is 5MB", { duration: 1500 });
         }
 
         setFilesURL((current) => [...current, ...imageURL]);
@@ -256,7 +266,7 @@ const StepTwo = ({
         status: "todo",
         orderPhotos: imageURLs,
         deliveryDate: date,
-        description: "",
+        description: note,
         ...newShirtSize,
         ...newPantSize,
         shirtCount,
@@ -265,10 +275,13 @@ const StepTwo = ({
 
       createOrderMutation(payload, {
         onSuccess: (response) => {
-          console.log(response);
+          setOrderDetails(response?.data?.data);
+          setActiveStep(3);
         },
         onError: (error) => {
-          console.log(error);
+          toast.error("Failed to create order, Please try again", {
+            duration: 1500,
+          });
         },
       });
     }
@@ -572,7 +585,7 @@ const StepTwo = ({
       {/* user note */}
       <div className="flex flex-col gap-3">
         <Label>Note</Label>
-        <Textarea />
+        <Textarea value={note} onChange={(e) => setNote(e.target.value)} />
       </div>
 
       {/* shirt & pant count */}
@@ -683,7 +696,18 @@ const StepTwo = ({
           <ChevronLeftIcon height={24} width={24} />
         </Button>
 
-        <Button onClick={handleSubmit}>Create Order</Button>
+        <Button
+          className="gap-1"
+          onClick={handleSubmit}
+          disabled={isMutating === 1}
+        >
+          Create Order
+          {isMutating ? (
+            <ArrowPathIcon height={20} width={20} className="animate-spin" />
+          ) : (
+            <ArrowRightIcon height={16} width={16} />
+          )}
+        </Button>
       </div>
     </section>
   );

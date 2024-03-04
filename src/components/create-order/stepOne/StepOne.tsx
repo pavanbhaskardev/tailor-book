@@ -16,7 +16,7 @@ import { Label } from "../../ui/label";
 import { Avatar, AvatarImage } from "../../ui/avatar";
 import Search from "@/components/Search";
 import { Button } from "@/components/ui/button";
-import { ArrowPathIcon, ArrowRightIcon } from "@heroicons/react/24/solid";
+import { ArrowPathIcon, ArrowRightIcon } from "@heroicons/react/16/solid";
 import { isEmpty } from "ramda";
 import { CustomerDetails, SizeList } from "@/utils/interfaces";
 import axiosConfig from "@/utils/axiosConfig";

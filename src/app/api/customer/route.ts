@@ -49,6 +49,7 @@ export async function GET(request: Request) {
       userId: id,
       ...query,
     })
+      .sort({ name: 1 })
       .limit(limitValue)
       .skip(offsetValue * limitValue);
 
