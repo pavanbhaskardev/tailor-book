@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React, { useState, ChangeEvent, useEffect, useMemo } from "react";
 import {
   PlusIcon,
   MinusIcon,
@@ -104,10 +104,12 @@ const StepTwo = ({
     clothesCountStatus: false,
     imageCountStatus: false,
     dateStatus: false,
+    priceStatus: false,
   });
   const [filesList, setFilesList] = useState<FileListType[]>([]);
   const [filesURL, setFilesURL] = useState<FileUrlType[]>([]);
   const [note, setNote] = useState("");
+  const [price, setPrice] = useState("");
   const isMutating = useIsMutating();
   const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
 
@@ -125,7 +127,7 @@ const StepTwo = ({
   useEffect(() => {
     return () => {
       if (!isEmpty(filesURL)) {
-        filesURL.forEach((url) => URL.revokeObjectURL(url));
+        filesURL.forEach(({ url }) => URL.revokeObjectURL(url));
       }
     };
   }, []);
@@ -145,6 +147,7 @@ const StepTwo = ({
     return { size: flooredSize, quarter: formatSize(size - flooredSize) };
   });
 
+  // when user adds image automatically storing image in state & creating objectURL
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
 
@@ -192,6 +195,7 @@ const StepTwo = ({
     }
   };
 
+  // removes the image from state and objectURL also
   const removeFile = (id: string) => {
     const objectURL = filesURL.filter((urlDetails) => urlDetails.id === id)[0]
       .url;
@@ -205,6 +209,9 @@ const StepTwo = ({
   };
 
   const handleSubmit = async () => {
+    // converting the price to a number
+    const formattedPrice = +price.replace(/,/g, "");
+
     // setting the error states
     setErrorStatus((current) => ({
       ...current,
@@ -213,13 +220,15 @@ const StepTwo = ({
       imageCountStatus: isEmpty(filesList),
       pantSizeListStatus: pantCount >= 1 && isEmpty(pantList),
       shirtSizeListStatus: shirtCount >= 1 && isEmpty(shirtList),
+      priceStatus: formattedPrice < 1,
     }));
 
-    // returning if any validation not met
+    // returning if any validation was not met
     if (
       (shirtCount !== 0 || pantCount !== 0) &&
       date !== undefined &&
-      !isEmpty(filesList)
+      !isEmpty(filesList) &&
+      formattedPrice > 0
     ) {
       if (
         (pantCount >= 1 && isEmpty(pantList)) ||
@@ -271,6 +280,7 @@ const StepTwo = ({
         ...newPantSize,
         shirtCount,
         pantCount,
+        price: formattedPrice,
       };
 
       createOrderMutation(payload, {
@@ -286,6 +296,17 @@ const StepTwo = ({
       });
     }
   };
+
+  const dateAndPriceMessage = useMemo(() => {
+    if (errorStatus.dateStatus && errorStatus.priceStatus) {
+      return "Delivery Date & Price is required";
+    } else if (errorStatus.dateStatus && !errorStatus.priceStatus) {
+      return "Delivery Date is required";
+    } else if (errorStatus.priceStatus && !errorStatus.dateStatus) {
+      return "Price is required";
+    }
+    return "";
+  }, [errorStatus.dateStatus, errorStatus.priceStatus]);
 
   return (
     <section className="space-y-8">
@@ -534,50 +555,94 @@ const StepTwo = ({
         )}
       </div>
 
-      {/* Delivery date */}
-      <div className="flex flex-col gap-3">
-        <Label
-          className={`${errorStatus.dateStatus ? "text-destructive" : ""}`}
-        >
-          Delivery Date
-        </Label>
+      <div className="grid grid-cols-[max-content_1fr] gap-3">
+        {/* Delivery date */}
+        <div className="flex flex-col gap-3">
+          <Label
+            className={`${errorStatus.dateStatus ? "text-destructive" : ""}`}
+          >
+            Delivery Date
+          </Label>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-[240px] justify-start text-left font-normal",
-                !date && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(date) => {
-                setDate(date);
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[205px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(date) => {
+                  setDate(date);
 
-                if (errorStatus.dateStatus) {
+                  if (errorStatus.dateStatus) {
+                    setErrorStatus((current) => ({
+                      ...current,
+                      dateStatus: date === undefined,
+                    }));
+                  }
+                }}
+                initialFocus
+                disabled={(current) => endOfToday() > current}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* order pricing */}
+        <div className="flex flex-col gap-3">
+          <Label
+            className={`${errorStatus.priceStatus ? "text-destructive" : ""}`}
+          >
+            Price
+          </Label>
+
+          <div className="relative">
+            <Input
+              type="text"
+              value={price}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                // Remove non-digit characters (except dot) from the value
+                const sanitizedValue = value.replace(/[^\d.]/g, "");
+                // Split the value by dot
+                const parts = sanitizedValue.split(".");
+                // Add commas for thousands
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                // Join the parts and update the price state
+                setPrice(parts.join("."));
+              }}
+              onBlur={() => {
+                const formattedPrice = +price.replace(/,/g, "");
+                if (formattedPrice > 0 && errorStatus.priceStatus) {
                   setErrorStatus((current) => ({
                     ...current,
-                    dateStatus: date === undefined,
+                    priceStatus: false,
                   }));
                 }
               }}
-              initialFocus
-              disabled={(current) => endOfToday() > current}
+              className="pl-6"
             />
-          </PopoverContent>
-        </Popover>
 
-        {errorStatus.dateStatus && (
-          <p className="text-[0.8rem] font-medium text-destructive">
-            Delivery date is required
+            <span className="absolute top-1.5 left-2 text-muted-foreground">
+              ₹
+            </span>
+          </div>
+        </div>
+
+        {(errorStatus.dateStatus || errorStatus.priceStatus) && (
+          <p className="text-[0.8rem] font-medium text-destructive col-span-2">
+            {dateAndPriceMessage}
           </p>
         )}
       </div>

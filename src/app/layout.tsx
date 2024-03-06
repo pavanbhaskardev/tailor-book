@@ -40,7 +40,7 @@ export default function RootLayout({
           >
             <QueryProvider>
               <Navbar />
-              <main className="px-4 my-3">{children}</main>
+              <main className="px-4 my-3 overflow-x-hidden">{children}</main>
             </QueryProvider>
             <Toaster richColors />
           </ThemeProvider>

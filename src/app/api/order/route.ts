@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       {
         userId: orderDetails.userId,
         customerId: orderDetails.customerId,
-        customerDetails: orderDetails.customerObjectId,
+        customerDetails: orderDetails.customerDetails,
         orderId: orderDetails.orderId,
         status: orderDetails.status,
         orderPhotos: orderDetails.orderPhotos,
@@ -48,6 +48,7 @@ export async function POST(request: Request) {
         ...newShirtSize,
         shirtCount: orderDetails.shirtCount,
         pantCount: orderDetails.pantCount,
+        price: orderDetails.price,
       },
       {
         upsert: true,

@@ -25,4 +25,5 @@ export type OrderDetailsType = {
   description?: string;
   newShirtSize?: number[];
   newPantSize?: number[];
+  price: number;
 };

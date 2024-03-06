@@ -14,6 +14,7 @@ const orderSchema = new Schema(
     pantCount: { type: Number, required: true, immutable: true },
     newShirtSize: { type: [Number] },
     newPantSize: { type: [Number] },
+    price: { type: Number, required: true, immutable: true },
   },
   {
     timestamps: true,
