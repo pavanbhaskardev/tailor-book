@@ -7,6 +7,7 @@ interface userDetails {
   id: string;
   name: string;
   email: string;
+  incrementOrder: "true" | "false";
 }
 
 export async function POST(request: Request) {
@@ -26,24 +27,30 @@ export async function POST(request: Request) {
   // connects to MongoDB
   await connectMongoDB();
 
+  const incrementOrder = Boolean(userDetails.incrementOrder);
+  const updateDetails = incrementOrder
+    ? { $inc: { ordersCount: 1 } }
+    : {
+        id: userDetails.id,
+        name: userDetails.name,
+        email: userDetails.email,
+      };
+
   // creating the user in our database
   try {
     const user = await User.findOneAndUpdate(
       {
         id: userDetails.id,
       },
-      {
-        id: userDetails.id,
-        name: userDetails.name,
-        email: userDetails.email,
-      },
+      updateDetails,
       {
         upsert: true,
+        new: true,
       }
     );
 
     return NextResponse.json(
-      { message: "Successfully created user", data: user },
+      { message: "Successfully updated user", data: user },
       { status: 200 }
     );
   } catch (error: any) {

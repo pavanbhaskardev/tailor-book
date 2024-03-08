@@ -11,7 +11,7 @@ export type CustomerDetails = {
   shirtSize: number[];
   pantSize: number[];
   customerPhoto: string;
-  _id: string;
+  _id?: string;
 };
 
 export type OrderDetailsType = {

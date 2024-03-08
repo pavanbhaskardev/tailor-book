@@ -69,12 +69,14 @@ const StepThree = ({
 
   return (
     <section>
-      <QRCodeSVG
-        value={url}
-        size={300}
-        includeMargin={false}
-        className="mx-auto"
-      />
+      <div className="p-3 bg-white rounded-sm">
+        <QRCodeSVG
+          value={url}
+          size={300}
+          includeMargin={false}
+          className="mx-auto"
+        />
+      </div>
 
       <p className="mt-8 mb-3">Share this link via</p>
 

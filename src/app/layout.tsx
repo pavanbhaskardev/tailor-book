@@ -7,6 +7,7 @@ import ThemeProvider from "@/components/ThemeProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
 import QueryProvider from "@/components/QueryProvider";
+import NetworkStatusProvider from "@/components/NetworkStatusProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,8 +40,10 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
-              <Navbar />
-              <main className="px-4 my-3 overflow-x-hidden">{children}</main>
+              <NetworkStatusProvider>
+                <Navbar />
+                <main className="px-4 my-3 overflow-x-hidden">{children}</main>
+              </NetworkStatusProvider>
             </QueryProvider>
             <Toaster richColors />
           </ThemeProvider>

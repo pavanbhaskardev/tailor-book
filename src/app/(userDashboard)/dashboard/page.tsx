@@ -24,9 +24,9 @@ const Page = () => {
   // const user = auth();
   const { isLoaded, userId, sessionId, getToken } = useAuth();
 
-  if (userId) {
-    getCustomerList(userId);
-  }
+  // if (userId) {
+  //   getCustomerList(userId);
+  // }
 
   return (
     <section className="relative" style={{ height: "calc(100vh - 5.125rem)" }}>

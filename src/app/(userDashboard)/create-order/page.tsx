@@ -32,6 +32,7 @@ const CreateOrder = () => {
     description: "",
     newShirtSize: [],
     newPantSize: [],
+    price: 0,
   });
 
   const stepsContainerRef = useRef(null);

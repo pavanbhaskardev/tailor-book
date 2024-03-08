@@ -117,7 +117,6 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
         limit: 20,
         setSelectedCustomerId,
       }),
-    enabled: false,
   });
 
   const { mutateAsync: uploadImageMutation } = useMutation({
