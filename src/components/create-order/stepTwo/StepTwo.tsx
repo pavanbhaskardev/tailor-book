@@ -14,7 +14,11 @@ import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { format, endOfToday } from "date-fns";
 import { toast } from "sonner";
 import useSound from "use-sound";
-import { useMutation, useIsMutating } from "@tanstack/react-query";
+import {
+  useMutation,
+  useIsMutating,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -23,6 +27,7 @@ import {
   CustomerDetails,
   OrderDetailsType,
   SizeList,
+  UserDetailsType,
 } from "@/utils/interfaces";
 import SizeDrawer, { formatSize } from "@/components/SizeDrawer";
 import avatarUtil from "@/utils/avatarUtil";
@@ -37,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { uploadImageToS3 } from "@/utils/commonApi";
 import { createNewOrder } from "@/utils/commonApi";
+import { incrementOrderId } from "@/utils/commonApi";
 
 type StepTwoType = {
   customerDetails: CustomerDetails;
@@ -55,6 +61,7 @@ type FileListType = {
   id: string;
 };
 
+// image files animation variants
 const variants = {
   initial: {
     y: "20px",
@@ -72,6 +79,7 @@ const variants = {
   },
 };
 
+// max image size is 5MB
 const maxFileSize = 1024 * 1024 * 5;
 
 const StepTwo = ({
@@ -112,6 +120,7 @@ const StepTwo = ({
   const [price, setPrice] = useState("");
   const isMutating = useIsMutating();
   const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
+  const queryClient = useQueryClient();
 
   const { mutateAsync: uploadImageMutation } = useMutation({
     mutationFn: uploadImageToS3,
@@ -123,6 +132,11 @@ const StepTwo = ({
     mutationKey: ["create-new-order"],
   });
 
+  const { mutateAsync: orderIdMutation } = useMutation({
+    mutationFn: incrementOrderId,
+    mutationKey: ["new-order-id"],
+  });
+
   // removing the created objectURL's
   useEffect(() => {
     return () => {
@@ -130,7 +144,7 @@ const StepTwo = ({
         filesURL.forEach(({ url }) => URL.revokeObjectURL(url));
       }
     };
-  }, []);
+  }, [filesURL]);
 
   const { color, initials } = avatarUtil(customerDetails?.name || "");
   // returns the formatted sizes list
@@ -237,6 +251,35 @@ const StepTwo = ({
         return;
       }
 
+      // creating a new orderID
+      const userData: UserDetailsType | undefined = queryClient.getQueryData([
+        "user-details",
+      ]);
+
+      let orderId = 0;
+
+      if (userData) {
+        await orderIdMutation(
+          {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            incrementOrder: "true",
+          },
+          {
+            onSuccess: (response) => {
+              orderId = response?.data?.data?.ordersCount;
+            },
+            onError: (error) => {
+              console.log({ error });
+              return toast.error("Failed to create order, Please try again", {
+                duration: 1500,
+              });
+            },
+          }
+        );
+      }
+
       let imageURLs: string[] = [];
       for (const details of filesList) {
         await uploadImageMutation(
@@ -260,24 +303,21 @@ const StepTwo = ({
       const shirtSizeList = shirtList.map((details) => details.size);
       const pantSizeList = pantList.map((details) => details.size);
 
-      const newShirtSize = equals(customerDetails.shirtSize, shirtSizeList)
-        ? {}
-        : { newShirtSize: shirtSizeList };
-      const newPantSize = equals(customerDetails.pantSize, pantSizeList)
-        ? {}
-        : { newShirtSize: pantSizeList };
-
       const payload = {
         userId: customerDetails.userId,
         customerId: customerDetails.customerId,
-        customerDetails: customerDetails._id,
-        orderId: uuidv4(),
+        customerDetails: customerDetails._id || "",
+        orderId,
         status: "todo",
         orderPhotos: imageURLs,
         deliveryDate: date,
         description: note,
-        ...newShirtSize,
-        ...newPantSize,
+        newShirtSize: equals(customerDetails.shirtSize, shirtSizeList)
+          ? []
+          : shirtSizeList,
+        newPantSize: equals(customerDetails.pantSize, pantSizeList)
+          ? []
+          : pantSizeList,
         shirtCount,
         pantCount,
         price: formattedPrice,

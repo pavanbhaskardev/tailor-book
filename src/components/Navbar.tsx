@@ -30,6 +30,13 @@ const Navbar = () => {
   const { user } = useUser();
   const pathname = usePathname();
   const { color, initials } = avatarUtil(user?.fullName || "");
+  const params = new URLSearchParams();
+  params.set("height", "200");
+  params.set("width", "200");
+  params.set("quality", "85");
+  params.set("fit", "crop");
+
+  const imageSrc = `${user?.imageUrl}?${params.toString()}`;
 
   const authenticatedLinks = user
     ? [
@@ -74,10 +81,7 @@ const Navbar = () => {
             <div className="grid ">
               <SheetHeader>
                 <Avatar className="h-11 w-11 mb-2">
-                  <AvatarImage
-                    src={user?.imageUrl}
-                    alt={user?.fullName || ""}
-                  />
+                  <AvatarImage src={imageSrc} alt={user?.fullName || ""} />
                   <AvatarFallback style={{ backgroundColor: color }}>
                     {initials}
                   </AvatarFallback>

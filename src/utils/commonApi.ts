@@ -1,6 +1,7 @@
 import axiosConfig from "./axiosConfig";
 import { CustomerDetails } from "./interfaces";
 import { OrderDetailsType } from "./interfaces";
+import { UserDetailsType } from "./interfaces";
 
 // Uploads the image to the s3 and return the image URL
 export const uploadImageToS3 = async ({
@@ -51,6 +52,14 @@ export const createNewCustomer = async ({
 export const createNewOrder = async (payload: OrderDetailsType) => {
   return axiosConfig({
     url: "api/order",
+    method: "POST",
+    data: payload,
+  });
+};
+
+export const incrementOrderId = async (payload: UserDetailsType) => {
+  return axiosConfig({
+    url: "api/user",
     method: "POST",
     data: payload,
   });

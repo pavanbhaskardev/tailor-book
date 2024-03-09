@@ -18,7 +18,7 @@ export type OrderDetailsType = {
   userId: string;
   customerId: string;
   customerDetails: string;
-  orderId: string;
+  orderId: number;
   status: string;
   orderPhotos: string[];
   deliveryDate: Date;
@@ -26,4 +26,11 @@ export type OrderDetailsType = {
   newShirtSize?: number[];
   newPantSize?: number[];
   price: number;
+};
+
+export type UserDetailsType = {
+  id: string;
+  name: string;
+  email: string;
+  incrementOrder: "true" | "false";
 };

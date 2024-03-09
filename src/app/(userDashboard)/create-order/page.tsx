@@ -25,7 +25,7 @@ const CreateOrder = () => {
     userId: "",
     customerId: "",
     customerDetails: "",
-    orderId: "",
+    orderId: 0,
     status: "",
     orderPhotos: [],
     deliveryDate: new Date(),

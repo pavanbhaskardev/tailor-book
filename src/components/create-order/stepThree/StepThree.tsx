@@ -35,7 +35,8 @@ const StepThree = ({
   console.log(customerDetails);
 
   const url =
-    process.env.NEXT_PUBLIC_BASE_URL + `customer-order/${orderDetails.orderId}`;
+    process.env.NEXT_PUBLIC_BASE_URL +
+    `customer-order/${orderDetails.customerId}/${orderDetails.orderId}`;
   const title = `Hi ${customerDetails.name}👋, Your order details are ready! 🛍️ Click the link below to track your order: `;
 
   // resetting all the states to default if customer selected new order

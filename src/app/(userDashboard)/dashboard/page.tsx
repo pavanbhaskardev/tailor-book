@@ -1,36 +1,47 @@
 "use client";
-import Search from "@/components/Search";
-import { useAuth } from "@clerk/nextjs";
-import { PlusIcon } from "@heroicons/react/16/solid";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-
-const getCustomerList = async (userId: string) => {
-  try {
-    const response = await fetch(
-      `http://localhost:3000/api/customer?id=${userId}`,
-      {
-        method: "GET",
-      }
-    );
-
-    const data = await response.json();
-  } catch (error) {
-    console.log("error details", error);
-  }
-};
+import { PlusIcon } from "@heroicons/react/16/solid";
+import { useQuery } from "@tanstack/react-query";
+import Search from "@/components/Search";
+import { useUser } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import axiosConfig from "@/utils/axiosConfig";
 
 const Page = () => {
-  // const user = auth();
-  const { isLoaded, userId, sessionId, getToken } = useAuth();
+  const { user } = useUser();
 
-  // if (userId) {
-  //   getCustomerList(userId);
-  // }
+  const createNewUser = async () => {
+    try {
+      const response = await axiosConfig({
+        url: "api/user",
+        method: "POST",
+        data: {
+          id: user?.id,
+          name: user?.fullName,
+          email: user?.primaryEmailAddress?.emailAddress,
+          incrementOrder: "false",
+        },
+      });
+
+      return response?.data?.data;
+    } catch (error) {
+      console.log({ error });
+      return error;
+    }
+  };
+
+  // this hook is to create a new user in mongoDB
+  useQuery({
+    queryKey: ["user-details"],
+    queryFn: createNewUser,
+    enabled: user ? true : false,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 
   return (
     <section className="relative" style={{ height: "calc(100vh - 5.125rem)" }}>
-      <Search placeholder="Search" />
+      {/* <Search placeholder="Search" onChange={()=>{}} spin={false}/> */}
 
       <Button
         size="icon"

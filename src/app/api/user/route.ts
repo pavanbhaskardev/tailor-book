@@ -2,16 +2,10 @@ import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 import connectMongoDB from "@/lib/mongoDB";
 import User from "@/models/user";
-
-interface userDetails {
-  id: string;
-  name: string;
-  email: string;
-  incrementOrder: "true" | "false";
-}
+import { UserDetailsType } from "@/utils/interfaces";
 
 export async function POST(request: Request) {
-  const userDetails: userDetails = await request.json();
+  const userDetails: UserDetailsType = await request.json();
   const { userId } = auth();
 
   // checking if the user is authenticated or not
@@ -27,7 +21,8 @@ export async function POST(request: Request) {
   // connects to MongoDB
   await connectMongoDB();
 
-  const incrementOrder = Boolean(userDetails.incrementOrder);
+  const incrementOrder = userDetails.incrementOrder === "true";
+
   const updateDetails = incrementOrder
     ? { $inc: { ordersCount: 1 } }
     : {

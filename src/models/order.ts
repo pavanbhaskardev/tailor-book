@@ -5,7 +5,7 @@ const orderSchema = new Schema(
     userId: { type: String, required: true, immutable: true },
     customerId: { type: String, required: true, immutable: true },
     customerDetails: { type: mongoose.Types.ObjectId, ref: "Customer" },
-    orderId: { type: String, required: true, immutable: true },
+    orderId: { type: Number, required: true, immutable: true },
     status: { type: String, required: true },
     orderPhotos: { type: [String], required: true },
     deliveryDate: { type: Date, required: true, immutable: true },
