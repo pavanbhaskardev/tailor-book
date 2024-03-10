@@ -8,11 +8,18 @@ interface SearchProps {
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   spin: boolean;
+  className?: string;
 }
 
-const Search = ({ placeholder, onChange, value, spin }: SearchProps) => {
+const Search = ({
+  placeholder,
+  onChange,
+  value,
+  spin,
+  className = "",
+}: SearchProps) => {
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       <MagnifyingGlassIcon
         height={20}
         width={20}

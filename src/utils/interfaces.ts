@@ -17,7 +17,7 @@ export type CustomerDetails = {
 export type OrderDetailsType = {
   userId: string;
   customerId: string;
-  customerDetails: string;
+  customerDetails: string | CustomerDetails;
   orderId: number;
   status: string;
   orderPhotos: string[];
@@ -26,6 +26,8 @@ export type OrderDetailsType = {
   newShirtSize?: number[];
   newPantSize?: number[];
   price: number;
+  shirtCount: number;
+  pantCount: number;
 };
 
 export type UserDetailsType = {

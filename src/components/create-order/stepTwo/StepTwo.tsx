@@ -271,7 +271,6 @@ const StepTwo = ({
               orderId = response?.data?.data?.ordersCount;
             },
             onError: (error) => {
-              console.log({ error });
               return toast.error("Failed to create order, Please try again", {
                 duration: 1500,
               });
@@ -281,6 +280,7 @@ const StepTwo = ({
       }
 
       let imageURLs: string[] = [];
+
       for (const details of filesList) {
         await uploadImageMutation(
           {
@@ -289,11 +289,9 @@ const StepTwo = ({
           },
           {
             onSuccess: (response) => {
-              console.log(response?.data?.data);
               imageURLs.push(response?.data?.data);
             },
             onError: (error) => {
-              console.log(error);
               imageURLs.push("");
             },
           }

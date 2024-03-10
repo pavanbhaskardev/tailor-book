@@ -2,7 +2,73 @@ import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 import connectMongoDB from "@/lib/mongoDB";
 import { Order } from "@/models/order";
+import { Customer } from "@/models/customer";
 
+type Query = {
+  $expr?: { $regexMatch: { input: { $toString: string }; regex: RegExp } };
+};
+
+export async function GET(request: Request) {
+  const { userId: id } = auth();
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId");
+
+  const limit = searchParams.get("limit");
+  const offset = searchParams.get("offset");
+  const limitValue = limit ? +limit : 10;
+  const offsetValue = offset ? +offset : 0;
+
+  const searchWord = searchParams.get("searchWord") || "";
+  let query: Query = {};
+  const regex = /^[0-9]+$/;
+
+  // added the case
+  if (!id) {
+    return NextResponse.json(
+      {
+        message: "Unauthenticated",
+      },
+      { status: 401 }
+    );
+  }
+
+  if (regex.test(searchWord)) {
+    query.$expr = {
+      $regexMatch: {
+        input: { $toString: "$orderId" },
+        regex: new RegExp(searchWord),
+      },
+    };
+  }
+
+  // connects to MongoDB
+  await connectMongoDB();
+
+  try {
+    const response = await Order.find({
+      userId,
+      ...query,
+    })
+      .limit(limitValue)
+      .skip(offsetValue * limitValue)
+      .sort({ createdAt: -1 })
+      .populate({ path: "customerDetails", model: Customer });
+
+    return NextResponse.json({ data: response }, { status: 200 });
+  } catch (error: unknown) {
+    console.log("failed to retrieve orders", error);
+
+    return NextResponse.json(
+      {
+        message: "Failed to retrieve orders",
+        error: error,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// this is to create & update order
 export async function POST(request: Request) {
   const orderDetails = await request.json();
   const { userId } = auth();
@@ -34,7 +100,7 @@ export async function POST(request: Request) {
 
   try {
     const response = await Order.findOneAndUpdate(
-      { orderId: orderDetails.orderId },
+      { orderId: orderDetails.orderId, customerId: orderDetails.customerId },
       {
         userId: orderDetails.userId,
         customerId: orderDetails.customerId,

@@ -10,6 +10,7 @@ interface Query {
 
 // to get the customer list
 export async function GET(request: Request) {
+  const { userId } = auth();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   const limit = searchParams.get("limit");
@@ -21,12 +22,12 @@ export async function GET(request: Request) {
   const regex = /^[0-9]+$/;
 
   // added the case
-  if (!id) {
+  if (!userId) {
     return NextResponse.json(
       {
-        message: "Invalid userId",
+        message: "Unauthenticated",
       },
-      { status: 400 }
+      { status: 401 }
     );
   }
 

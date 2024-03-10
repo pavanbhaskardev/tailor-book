@@ -37,7 +37,7 @@ const StepThree = ({
   const url =
     process.env.NEXT_PUBLIC_BASE_URL +
     `customer-order/${orderDetails.customerId}/${orderDetails.orderId}`;
-  const title = `Hi ${customerDetails.name}👋, Your order details are ready! 🛍️ Click the link below to track your order: `;
+  const title = `Hi ${customerDetails.name}👋, Here are your order details: `;
 
   // resetting all the states to default if customer selected new order
   const handleNewOrder = () => {
@@ -45,13 +45,16 @@ const StepThree = ({
       userId: "",
       customerId: "",
       customerDetails: "",
-      orderId: "",
+      orderId: 0,
       status: "",
       orderPhotos: [],
       deliveryDate: new Date(),
       description: "",
       newShirtSize: [],
       newPantSize: [],
+      price: 0,
+      shirtCount: 0,
+      pantCount: 0,
     });
 
     setCustomerDetails({

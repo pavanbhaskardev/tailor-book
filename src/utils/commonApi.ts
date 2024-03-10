@@ -51,7 +51,7 @@ export const createNewCustomer = async ({
 
 export const createNewOrder = async (payload: OrderDetailsType) => {
   return axiosConfig({
-    url: "api/order",
+    url: "api/orders",
     method: "POST",
     data: payload,
   });

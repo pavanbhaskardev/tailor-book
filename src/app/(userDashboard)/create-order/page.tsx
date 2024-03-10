@@ -21,6 +21,7 @@ const CreateOrder = () => {
     customerPhoto: "",
     _id: "",
   });
+
   const [orderDetails, setOrderDetails] = useState<OrderDetailsType>({
     userId: "",
     customerId: "",
@@ -33,6 +34,8 @@ const CreateOrder = () => {
     newShirtSize: [],
     newPantSize: [],
     price: 0,
+    shirtCount: 0,
+    pantCount: 0,
   });
 
   const stepsContainerRef = useRef(null);
@@ -64,7 +67,7 @@ const CreateOrder = () => {
     },
   };
 
-  const allSteps = {
+  const allSteps: { [key: number]: { description: string } } = {
     1: {
       description: "Customer details",
     },
