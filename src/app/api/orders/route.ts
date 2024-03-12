@@ -13,10 +13,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
 
-  const limit = searchParams.get("limit");
-  const offset = searchParams.get("offset");
-  const limitValue = limit ? +limit : 10;
-  const offsetValue = offset ? +offset : 0;
+  const limit = searchParams.get("limit") as string;
+  const offset = searchParams.get("offset") as string;
+  const limitValue = +limit;
+  const offsetValue = +offset;
 
   const searchWord = searchParams.get("searchWord") || "";
   let query: Query = {};
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       ...query,
     })
       .limit(limitValue)
-      .skip(offsetValue * limitValue)
+      .skip(offsetValue)
       .sort({ createdAt: -1 })
       .populate({ path: "customerDetails", model: Customer });
 

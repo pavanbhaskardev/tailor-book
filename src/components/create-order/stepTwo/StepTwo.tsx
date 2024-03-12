@@ -736,6 +736,7 @@ const StepTwo = ({
 
                 return (
                   <motion.div
+                    layout
                     className="border border-input p-5 rounded-sm flex justify-between items-center gap-2 w-full"
                     key={details.id}
                     variants={variants}
@@ -746,7 +747,6 @@ const StepTwo = ({
                       duration: 0.2,
                       delay: index * 0.05,
                     }}
-                    layout
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img

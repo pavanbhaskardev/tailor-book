@@ -42,7 +42,7 @@ export default function RootLayout({
             <QueryProvider>
               <NetworkStatusProvider>
                 <Navbar />
-                <main className="px-4 my-3 overflow-x-hidden">{children}</main>
+                <main className="px-4 py-3 overflow-x-hidden">{children}</main>
               </NetworkStatusProvider>
             </QueryProvider>
             <Toaster richColors />

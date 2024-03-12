@@ -42,7 +42,7 @@ const OrderCard = ({
           className="h-[110px] w-[110px] object-cover rounded-sm"
         />
 
-        <div className="text-sm flex flex-col gap-2">
+        <div className="text-[12px] flex flex-col gap-2">
           <p>
             <span className="text-muted-foreground">Delivery: </span>
             {format(deliveryDate, "PPP")}
