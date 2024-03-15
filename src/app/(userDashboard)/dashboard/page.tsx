@@ -1,20 +1,17 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
-import React, { Fragment, useMemo, useCallback, useRef } from "react";
+import React, { useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { isEmpty } from "ramda";
-import { format } from "date-fns";
 import { ArrowPathIcon, InboxIcon } from "@heroicons/react/24/solid";
-import { motion } from "framer-motion";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import Search from "@/components/Search";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import axiosConfig from "@/utils/axiosConfig";
 import { OrderDetailsType } from "@/utils/interfaces";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import OrderCard from "@/components/OrderCard";
 
 const DisplayStatus: { [key: string]: string } = {
   todo: "To Do",
@@ -118,8 +115,6 @@ const Page = () => {
   // this is for infinite query
   const lastElement = useCallback(
     (node: HTMLDivElement | null) => {
-      console.log({ node, hasNextPage, isFetchingNextPage });
-
       if (!node || !hasNextPage) {
         return;
       }
@@ -143,81 +138,8 @@ const Page = () => {
     [data, isFetchingNextPage]
   );
 
-  const OrdersList = () => {
-    if (isLoading) {
-      return (
-        <div className="flex w-screen justify-center items-center h-[60vh] ">
-          <ArrowPathIcon
-            height={24}
-            width={24}
-            className="animate-spin fill-muted-foreground"
-          />
-        </div>
-      );
-    }
-
-    if (!isLoading && !isEmpty(orderData)) {
-      return orderData.map((details: OrderDetailsType, index) => {
-        const quantity = details.shirtCount + details.pantCount;
-
-        return (
-          <motion.div
-            variants={variants}
-            initial="initial"
-            animate="animate"
-            transition={{
-              delay: 0.05 * index,
-            }}
-            className="flex gap-4 items-center bg-card p-3 mb-3 rounded-md"
-            ref={orderData.length === index + 1 ? lastElement : null}
-            key={details.orderId}
-          >
-            <img
-              src={details?.orderPhotos[0]}
-              alt="order_image"
-              className="h-[110px] w-[120px] object-cover rounded-sm"
-            />
-
-            <div className="flex flex-col gap-2 grow">
-              <div className="flex w-full justify-between items-end">
-                <p className="font-medium"># {details?.orderId}</p>
-                <Badge className="bg-slate-400 hover:bg-slate-400/90">
-                  {DisplayStatus[details?.status]}
-                </Badge>
-              </div>
-
-              <p className="text-[12px] mt-3">
-                <span className="text-muted-foreground">Delivery: </span>
-                {format(details?.deliveryDate, "PPP")}
-              </p>
-
-              <p className="text-[12px]">
-                <span className="text-muted-foreground">Qty: </span>
-                {quantity}
-              </p>
-
-              <Link
-                href="/dashboard"
-                className="text-[12px] text-primary cursor-pointer hover:underline"
-              >
-                Details
-              </Link>
-            </div>
-          </motion.div>
-        );
-      });
-    } else {
-      return (
-        <div className="flex flex-col items-center justify-center h-[60vh] gap-2">
-          <InboxIcon height={40} width={40} className="fill-muted-foreground" />
-          <p className="text-muted-foreground">No order created</p>
-        </div>
-      );
-    }
-  };
-
   return (
-    <section className="relative" onScroll={(e) => console.log(e)}>
+    <section className="relative">
       <Search
         className="mt-1 mb-4"
         value=""
@@ -226,7 +148,41 @@ const Page = () => {
         spin={false}
       />
 
-      <OrdersList />
+      {isLoading && (
+        <div className="flex w-screen justify-center items-center h-[60vh] ">
+          <ArrowPathIcon
+            height={24}
+            width={24}
+            className="animate-spin fill-muted-foreground"
+          />
+        </div>
+      )}
+
+      {!isEmpty(orderData) && !isLoading ? (
+        <>
+          {orderData.map((details: OrderDetailsType, index) => (
+            <OrderCard
+              details={details}
+              index={index}
+              key={details?.orderId}
+              lastElement={orderData.length === index + 1 ? lastElement : null}
+            />
+          ))}
+
+          {isFetchingNextPage && (
+            <ArrowPathIcon
+              height={24}
+              width={24}
+              className="animate-spin fill-muted-foreground mx-auto"
+            />
+          )}
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-[60vh] gap-2">
+          <InboxIcon height={40} width={40} className="fill-muted-foreground" />
+          <p className="text-muted-foreground">No order created</p>
+        </div>
+      )}
 
       <Button size="icon" className="fixed bottom-2 right-2 w-12 h-12" asChild>
         <Link href="/create-order">

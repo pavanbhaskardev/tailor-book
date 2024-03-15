@@ -4,14 +4,8 @@ import React from "react";
 import { format } from "date-fns";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
-
-type OrderCardType = {
-  deliveryDate: Date;
-  quantity: number;
-  orderId: number;
-  pic: string;
-  status: string;
-};
+import { motion } from "framer-motion";
+import { OrderDetailsType } from "@/utils/interfaces";
 
 const DisplayStatus: { [key: string]: string } = {
   todo: "To Do",
@@ -19,49 +13,72 @@ const DisplayStatus: { [key: string]: string } = {
   done: "Done",
 };
 
+// image files animation variants
+const variants = {
+  initial: {
+    y: "40px",
+    opacity: 0,
+  },
+  animate: {
+    y: 0,
+    opacity: 1,
+  },
+};
+
 const OrderCard = ({
-  deliveryDate,
-  quantity,
-  orderId,
-  pic,
-  status,
-}: OrderCardType) => {
+  details,
+  index,
+  lastElement,
+}: {
+  details: OrderDetailsType;
+  index: number;
+  lastElement: ((node: HTMLDivElement | null) => void) | null;
+}) => {
+  const quantity = details.shirtCount + details.pantCount;
+
   return (
-    <div>
-      <div className="flex w-full justify-between items-center">
-        <p className="font-medium"># {orderId}</p>
-        <Badge className="bg-slate-400 hover:bg-slate-400/90">
-          {DisplayStatus[status]}
-        </Badge>
-      </div>
+    <motion.div
+      variants={variants}
+      initial="initial"
+      animate="animate"
+      transition={{
+        delay: 0.05 * index,
+      }}
+      className="flex gap-4 items-center bg-card p-3 mb-3 rounded-md"
+      ref={lastElement}
+    >
+      <img
+        src={details?.orderPhotos[0]}
+        alt="order_image"
+        className="h-[110px] w-[120px] object-cover rounded-sm"
+      />
 
-      <div className="flex gap-4 items-center mt-1">
-        <img
-          src={pic}
-          alt="order_image"
-          className="h-[110px] w-[110px] object-cover rounded-sm"
-        />
-
-        <div className="text-[12px] flex flex-col gap-2">
-          <p>
-            <span className="text-muted-foreground">Delivery: </span>
-            {format(deliveryDate, "PPP")}
-          </p>
-
-          <p>
-            <span className="text-muted-foreground">Qty: </span>
-            {quantity}
-          </p>
-
-          <Link
-            href="/dashboard"
-            className="text-primary cursor-pointer hover:underline"
-          >
-            Details
-          </Link>
+      <div className="flex flex-col gap-1 grow">
+        <div className="flex w-full justify-between items-end">
+          <p className="font-medium leading-5"># {details?.orderId}</p>
+          <Badge className="bg-slate-400 hover:bg-slate-400/90">
+            {DisplayStatus[details?.status]}
+          </Badge>
         </div>
+
+        <p className="text-[12px] mt-4">
+          <span className="text-muted-foreground">Delivery: </span>
+          {format(details?.deliveryDate, "PPP")}
+        </p>
+
+        <p className="text-[12px]">
+          <span className="text-muted-foreground">Qty: </span>
+          {quantity}
+        </p>
+
+        <Link
+          href="/dashboard"
+          className="text-[12px] text-primary cursor-pointer hover:underline"
+        >
+          Details
+        </Link>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
