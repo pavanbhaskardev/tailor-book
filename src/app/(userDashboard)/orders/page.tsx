@@ -10,7 +10,6 @@ import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import axiosConfig from "@/utils/axiosConfig";
 import { OrderDetailsType } from "@/utils/interfaces";
-import { Badge } from "@/components/ui/badge";
 import OrderCard from "@/components/OrderCard";
 
 const DisplayStatus: { [key: string]: string } = {

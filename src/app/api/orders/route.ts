@@ -4,9 +4,11 @@ import connectMongoDB from "@/lib/mongoDB";
 import { Order } from "@/models/order";
 import { Customer } from "@/models/customer";
 
-type Query = {
-  $expr?: { $regexMatch: { input: { $toString: string }; regex: RegExp } };
-};
+type Query =
+  | {
+      orderId: number;
+    }
+  | {};
 
 export async function GET(request: Request) {
   const { userId: id } = auth();
@@ -33,12 +35,7 @@ export async function GET(request: Request) {
   }
 
   if (regex.test(searchWord)) {
-    query.$expr = {
-      $regexMatch: {
-        input: { $toString: "$orderId" },
-        regex: new RegExp(searchWord),
-      },
-    };
+    query = { orderId: +searchWord };
   }
 
   // connects to MongoDB

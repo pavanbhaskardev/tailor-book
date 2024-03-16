@@ -7,7 +7,7 @@ import { Badge } from "./ui/badge";
 import { motion } from "framer-motion";
 import { OrderDetailsType } from "@/utils/interfaces";
 
-const DisplayStatus: { [key: string]: string } = {
+export const displayStatus: { [key: string]: string } = {
   todo: "To Do",
   inProgress: "In Progress",
   done: "Done",
@@ -57,7 +57,7 @@ const OrderCard = ({
         <div className="flex w-full justify-between items-end">
           <p className="font-medium leading-5"># {details?.orderId}</p>
           <Badge className="bg-slate-400 hover:bg-slate-400/90">
-            {DisplayStatus[details?.status]}
+            {displayStatus[details?.status]}
           </Badge>
         </div>
 

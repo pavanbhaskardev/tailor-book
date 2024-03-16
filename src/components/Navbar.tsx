@@ -63,7 +63,7 @@ const Navbar = () => {
 
   return (
     <nav className="flex justify-between items-center px-4 py-3 bg-card sticky top-0 z-10">
-      <Link href={"/"}>
+      <Link href={user ? "/orders" : "/"}>
         <span className="flex items-center gap-1">
           <BookOpenIcon height={24} width={24} className="fill-primary" />
           <h1>Tailor Book</h1>
