@@ -13,6 +13,12 @@ export const displayStatus: { [key: string]: string } = {
   done: "Done",
 };
 
+export const badgeColor: { [key: string]: string } = {
+  todo: "bg-slate-400 hover:bg-slate-400/90",
+  inProgress: "bg-blue-400 hover:bg-blue-400/90",
+  done: "bg-emerald-400 hover:bg-emerald-400/90",
+};
+
 // image files animation variants
 const variants = {
   initial: {
@@ -56,7 +62,7 @@ const OrderCard = ({
       <div className="flex flex-col gap-1 grow">
         <div className="flex w-full justify-between items-end">
           <p className="font-medium leading-5"># {details?.orderId}</p>
-          <Badge className="bg-slate-400 hover:bg-slate-400/90">
+          <Badge className={badgeColor[details?.status]}>
             {displayStatus[details?.status]}
           </Badge>
         </div>
@@ -72,7 +78,7 @@ const OrderCard = ({
         </p>
 
         <Link
-          href="/dashboard"
+          href={`/orders/${details?.orderId}`}
           className="text-[12px] text-primary cursor-pointer hover:underline"
         >
           Details

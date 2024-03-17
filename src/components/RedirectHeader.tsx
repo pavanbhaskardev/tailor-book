@@ -14,7 +14,7 @@ const RedirectHeader = ({ name }: { name: string }) => {
       <Button
         size="icon"
         variant="ghost"
-        onClick={() => router.push(userId ? "/dashboard" : "/")}
+        onClick={() => router.push(userId ? "/orders" : "/")}
       >
         <ArrowLeftIcon height={16} width={16} />
       </Button>

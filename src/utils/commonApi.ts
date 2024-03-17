@@ -64,3 +64,26 @@ export const incrementOrderId = async (payload: UserDetailsType) => {
     data: payload,
   });
 };
+
+export const getCustomerOrderDetails = async ({
+  customerId,
+  orderId,
+}: {
+  customerId: string;
+  orderId: number;
+}) => {
+  try {
+    const response = await axiosConfig({
+      method: "GET",
+      url: "/api/customer-order",
+      params: {
+        customerId: customerId,
+        orderId: orderId,
+      },
+    });
+
+    return response?.data?.data?.[0];
+  } catch (error: unknown) {
+    throw new Error(`Failed to get customer order ${error}`);
+  }
+};

@@ -1,9 +1,16 @@
 "use client";
-import React, { useMemo, useCallback, useRef } from "react";
+import React, {
+  useMemo,
+  useCallback,
+  useRef,
+  useState,
+  ChangeEvent,
+} from "react";
 import Link from "next/link";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { isEmpty } from "ramda";
 import { ArrowPathIcon, InboxIcon } from "@heroicons/react/24/solid";
+import debounce from "lodash.debounce";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import Search from "@/components/Search";
 import { useUser } from "@clerk/nextjs";
@@ -12,27 +19,15 @@ import axiosConfig from "@/utils/axiosConfig";
 import { OrderDetailsType } from "@/utils/interfaces";
 import OrderCard from "@/components/OrderCard";
 
-const DisplayStatus: { [key: string]: string } = {
-  todo: "To Do",
-  inProgress: "In Progress",
-  done: "Done",
-};
-
-// image files animation variants
-const variants = {
-  initial: {
-    y: "40px",
-    opacity: 0,
-  },
-  animate: {
-    y: 0,
-    opacity: 1,
-  },
-};
+// this will call the refetch fn after a debounce
+const handleDebounce = debounce((refetch) => {
+  refetch();
+}, 800);
 
 const Page = () => {
   const { user } = useUser();
   const observer = useRef<IntersectionObserver>(null);
+  const [searchWord, setSearchWord] = useState("");
 
   const createNewUser = async () => {
     try {
@@ -69,6 +64,7 @@ const Page = () => {
           userId: user?.id,
           limit: 10,
           offset: pageParam,
+          searchWord,
         },
         signal,
       });
@@ -88,20 +84,26 @@ const Page = () => {
     gcTime: Infinity,
   });
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery({
-      queryKey: ["order-list"],
-      queryFn: ({ pageParam, signal }) => getAllOrders({ pageParam, signal }),
-      initialPageParam: 0,
-      getNextPageParam: (lastPage, allPages) => {
-        if (lastPage.length === 10) {
-          return allPages.length * 10;
-        }
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: ["order-list"],
+    queryFn: ({ pageParam, signal }) => getAllOrders({ pageParam, signal }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length === 10) {
+        return allPages.length * 10;
+      }
 
-        return undefined;
-      },
-      enabled: user ? true : false,
-    });
+      return undefined;
+    },
+    enabled: user ? true : false,
+  });
 
   const orderData = useMemo(() => {
     if (data && Array.isArray(data?.pages)) {
@@ -137,13 +139,21 @@ const Page = () => {
     [data, isFetchingNextPage]
   );
 
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchWord(e.target.value);
+
+    handleDebounce(refetch);
+  };
+
+  console.log(helloThere);
+
   return (
     <section className="relative">
       <Search
         className="mt-1 mb-4"
-        value=""
+        value={searchWord}
         placeholder="Search"
-        onChange={() => {}}
+        onChange={handleChange}
         spin={false}
       />
 

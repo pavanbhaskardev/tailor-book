@@ -104,9 +104,9 @@ const StepThree = ({
 
       <div className="flex justify-between mt-40">
         <Button variant="secondary" className="gap-2" asChild>
-          <Link href="/dashboard">
+          <Link href="/orders">
             <ArrowLeftIcon height={16} width={16} />
-            Dashboard
+            Home
           </Link>
         </Button>
 
