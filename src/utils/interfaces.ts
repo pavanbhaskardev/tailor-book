@@ -36,3 +36,9 @@ export type UserDetailsType = {
   email: string;
   incrementOrder: "true" | "false";
 };
+
+export type EmailPayloadType = {
+  fromAddress: string;
+  url: string;
+  errorMessage: string;
+};
