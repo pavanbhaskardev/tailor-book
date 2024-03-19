@@ -1,13 +1,39 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { UserIcon } from "@heroicons/react/16/solid";
-import { DocumentCheckIcon } from "@heroicons/react/16/solid";
-import { CheckIcon } from "@heroicons/react/16/solid";
+import {
+  ArrowPathIcon,
+  UserIcon,
+  DocumentCheckIcon,
+  CheckIcon,
+} from "@heroicons/react/16/solid";
 import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import StepOne from "@/components/create-order/stepOne/StepOne";
-import StepTwo from "@/components/create-order/stepTwo/StepTwo";
-import StepThree from "@/components/create-order/stepThree/StepThree";
 import { CustomerDetails, OrderDetailsType } from "@/utils/interfaces";
+
+const StepTwo = dynamic(
+  () => import("../../../components/create-order/stepTwo/StepTwo"),
+  {
+    loading: () => (
+      <div className="h-[30vh] flex justify-center items-end">
+        <ArrowPathIcon height={24} width={24} className="animate-spin" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const StepThree = dynamic(
+  () => import("../../../components/create-order/stepThree/StepThree"),
+  {
+    loading: () => (
+      <div className="h-[30vh] flex justify-center items-end">
+        <ArrowPathIcon height={24} width={24} className="animate-spin" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 const CreateOrder = () => {
   const [activeStep, setActiveStep] = useState(1);
