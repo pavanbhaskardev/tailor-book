@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, MutableRefObject } from "react";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { XMarkIcon } from "@heroicons/react/16/solid";
-import useSound from "use-sound";
+// import useSound from "use-sound";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { v4 as uuidv4 } from "uuid";
@@ -64,7 +64,7 @@ const SizeDrawer = ({
   setSizeList,
   onDrawerClose,
 }: SizeDrawerProps) => {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [onHold, setOnHold] = useState<EditInterface>({
     status: false,
     id: "",
@@ -73,12 +73,14 @@ const SizeDrawer = ({
     status: false,
     id: "",
   });
-  const activeHoldRef = useRef(null);
+  const activeHoldRef = useRef<NodeJS.Timeout>(
+    null
+  ) as MutableRefObject<NodeJS.Timeout>;
   // these are for sound interaction
-  const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
-  const [playAddListSound] = useSound("/sounds/list_add_sound.mp3", {
-    volume: 0.4,
-  });
+  // const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
+  // const [playAddListSound] = useSound("/sounds/list_add_sound.mp3", {
+  //   volume: 0.4,
+  // });
 
   // this is to show which size to show based on the edit status
   const editSize = [...sizeList].filter(({ id }) => id === isEdit.id);
@@ -231,7 +233,7 @@ const SizeDrawer = ({
                         className="absolute w-5 h-5 -top-2 -right-2"
                         onClick={() => {
                           removeSize(id);
-                          play();
+                          // play();
                         }}
                       >
                         <XMarkIcon height={12} width={12} />
@@ -285,7 +287,7 @@ const SizeDrawer = ({
             <Button
               onClick={() => {
                 handleSizeList();
-                playAddListSound();
+                // playAddListSound();
               }}
               disabled={size === 0 && !isEdit.status}
             >

@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { format, endOfToday } from "date-fns";
 import { toast } from "sonner";
-import useSound from "use-sound";
+// import useSound from "use-sound";
 import {
   useMutation,
   useIsMutating,
@@ -119,7 +119,7 @@ const StepTwo = ({
   const [note, setNote] = useState("");
   const [price, setPrice] = useState("");
   const isMutating = useIsMutating();
-  const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
+  // const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
   const queryClient = useQueryClient();
 
   const { mutateAsync: uploadImageMutation } = useMutation({
@@ -219,7 +219,7 @@ const StepTwo = ({
     setFilesList(files);
     setFilesURL(urls);
     URL.revokeObjectURL(objectURL);
-    play();
+    // play();
   };
 
   const handleSubmit = async () => {

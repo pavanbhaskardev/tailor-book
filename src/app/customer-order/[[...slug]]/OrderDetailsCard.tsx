@@ -72,14 +72,14 @@ const OrderDetailsCard = ({
       : data?.newPantSize;
 
     return (
-      <section>
+      <section className="sm:max-w-2xl sm:mx-auto">
         <Carousel className="w-full my-3" setApi={setApi}>
           <CarouselContent>
             {data?.orderPhotos.map((src, index) => (
               <CarouselItem key={index}>
                 <img
                   alt="order-image"
-                  className="aspect-square object-cover rounded-sm"
+                  className="aspect-square object-cover rounded-sm sm:h-[500px] sm:aspect-video"
                   src={src}
                 />
               </CarouselItem>

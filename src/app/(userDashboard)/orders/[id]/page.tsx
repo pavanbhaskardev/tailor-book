@@ -121,7 +121,7 @@ const Page = ({ params }: { params: { id: string } }) => {
   // showing a loader on initial
   if (isLoading) {
     return (
-      <div className="flex w-screen justify-center items-center h-[60vh] ">
+      <div className="flex w-screen justify-center items-center h-[60vh] sm:max-w-2xl">
         <ArrowPathIcon
           height={24}
           width={24}

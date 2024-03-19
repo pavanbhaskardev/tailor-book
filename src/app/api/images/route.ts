@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
   try {
     const arrayBuffer = await file.arrayBuffer(); // Convert file to Buffer
     let resizedImage;
+    let resizedBuffer;
 
     if (imageCompression === "resize") {
       // compressing the image for performance
@@ -68,12 +69,14 @@ export async function POST(request: NextRequest) {
           withoutEnlargement: true,
         })
         .jpeg();
+      resizedBuffer = await resizedImage.toBuffer();
     } else if (imageCompression === "compress") {
       resizedImage = sharp(arrayBuffer).jpeg({ quality: 85 });
+      resizedBuffer = await resizedImage.toBuffer();
     }
 
     // converting the image to buffer format again
-    const resizedBuffer = await resizedImage.toBuffer();
+    // const resizedBuffer = await resizedImage.toBuffer();
 
     // changed from presigned URL to putObject
     const command = new PutObjectCommand({

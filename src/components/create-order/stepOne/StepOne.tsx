@@ -71,9 +71,7 @@ const getOldCustomersList = async ({
 
     return response?.data?.data || [];
   } catch (error: unknown) {
-    if (error && error?.request?.status) {
-      throw new Error(error?.request?.status);
-    }
+    throw new Error(`failed to get customers list: ${error}`);
   }
 };
 
@@ -99,7 +97,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
   const [searchWord, setSearchWord] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const { userId } = useAuth();
-  const btnRef = useRef(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const isMutating = useIsMutating();
 
   const {

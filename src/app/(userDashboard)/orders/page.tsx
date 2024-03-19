@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
   ChangeEvent,
+  MutableRefObject,
 } from "react";
 import Link from "next/link";
 import { PlusIcon } from "@heroicons/react/16/solid";
@@ -26,7 +27,9 @@ const handleDebounce = debounce((refetch) => {
 
 const Page = () => {
   const { user } = useUser();
-  const observer = useRef<IntersectionObserver>(null);
+  const observer = useRef<IntersectionObserver>(
+    null
+  ) as MutableRefObject<IntersectionObserver>;
   const [searchWord, setSearchWord] = useState("");
 
   const createNewUser = async () => {
