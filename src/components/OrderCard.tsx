@@ -49,6 +49,7 @@ const OrderCard = ({
       animate="animate"
       transition={{
         delay: 0.05 * index,
+        ease: [0.33, 1, 0.68, 1],
       }}
       className="flex gap-4 items-center bg-card p-3 mb-3 rounded-md"
       ref={lastElement}

@@ -102,6 +102,7 @@ const Page = () => {
 
       return undefined;
     },
+    staleTime: 0,
     enabled: user ? true : false,
   });
 
@@ -145,20 +146,18 @@ const Page = () => {
     handleDebounce(refetch);
   };
 
-  console.log(helloThere);
-
   return (
-    <section className="relative">
+    <section className="relative no-scrollbar">
       <Search
         className="mt-1 mb-4"
         value={searchWord}
         placeholder="Search"
         onChange={handleChange}
-        spin={false}
+        spin={(isLoading || isFetchingNextPage) && !isEmpty(searchWord)}
       />
 
       {isLoading && (
-        <div className="flex w-screen justify-center items-center h-[60vh] ">
+        <div className="flex w-screen justify-center items-center h-[60vh] sm:max-w-2xl">
           <ArrowPathIcon
             height={24}
             width={24}
@@ -193,7 +192,11 @@ const Page = () => {
         </div>
       )}
 
-      <Button size="icon" className="fixed bottom-2 right-2 w-12 h-12" asChild>
+      <Button
+        size="icon"
+        className="fixed bottom-2 right-2 w-12 h-12 sm:right-4 sm:bottom-4"
+        asChild
+      >
         <Link href="/create-order">
           <PlusIcon height={24} width={24} />
         </Link>

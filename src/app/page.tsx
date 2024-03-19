@@ -13,11 +13,11 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-col grow-0 items-start justify-center gap-2 mt-5">
-      <h1 className="text-4xl text-pretty">
+    <main className="flex flex-col grow-0 items-start justify-center gap-2 mt-5 md:max-w-3xl mx-auto md:mt-10">
+      <h1 className="text-4xl text-pretty md:text-7xl">
         Tailoring made <span className="text-primary">simple.</span>
       </h1>
-      <p className="text-muted-foreground">
+      <p className="text-muted-foreground md:text-lg">
         One place to track measurements & orders.
       </p>
       <Button asChild>

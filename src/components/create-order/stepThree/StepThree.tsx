@@ -73,7 +73,7 @@ const StepThree = ({
 
   return (
     <section>
-      <div className="p-3 bg-white rounded-sm">
+      <div className="p-3 bg-white rounded-sm max-w-max mx-auto">
         <QRCodeSVG
           value={url}
           size={300}

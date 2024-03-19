@@ -71,9 +71,10 @@ const Page = ({ params }: { params: { id: string } }) => {
     data,
     isLoading,
   }: { data: OrderDetailsType | undefined; isLoading: boolean } = useQuery({
-    queryKey: ["order-id"],
+    queryKey: ["order-id", params.id],
     queryFn: ({ signal }) => getOrderDetails(signal),
     enabled: user ? true : false,
+    staleTime: 0,
   });
 
   const { mutate, isPending } = useMutation({
@@ -82,9 +83,10 @@ const Page = ({ params }: { params: { id: string } }) => {
     onMutate: (newOrderData: OrderDetailsType) => {
       const previousOrderData = queryClient.getQueryData([
         "order-id",
+        params.id,
       ]) as object;
 
-      queryClient.setQueryData(["order-id"], {
+      queryClient.setQueryData(["order-id", params.id], {
         ...previousOrderData,
         status: newOrderData.status,
       });
@@ -94,7 +96,10 @@ const Page = ({ params }: { params: { id: string } }) => {
 
     onError: (err, variables, context) => {
       if (context?.previousOrderData) {
-        queryClient.setQueryData(["order-id"], context.previousOrderData);
+        queryClient.setQueryData(
+          ["order-id", params.id],
+          context.previousOrderData
+        );
       }
     },
   });
@@ -179,7 +184,7 @@ const Page = ({ params }: { params: { id: string } }) => {
               <CarouselItem key={index}>
                 <img
                   alt="order-image"
-                  className="aspect-square object-cover rounded-sm"
+                  className="aspect-square object-cover rounded-sm sm:h-[500px] sm:aspect-video"
                   src={src}
                 />
               </CarouselItem>

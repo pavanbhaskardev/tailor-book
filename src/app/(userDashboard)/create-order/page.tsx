@@ -117,7 +117,10 @@ const CreateOrder = () => {
             activeStep !== 1 ? "after:border-primary" : "after:border-input"
           }`}
         >
-          <span className="flex items-center justify-center w-10 h-10 rounded-full lg:h-12 lg:w-12 bg-primary shrink-0">
+          <span
+            className="flex items-center justify-center w-10 h-10 rounded-full lg:h-12 lg:w-12 bg-primary shrink-0"
+            title="Step 1"
+          >
             <UserIcon height={20} width={20} className="text-background" />
           </span>
         </li>
@@ -131,6 +134,7 @@ const CreateOrder = () => {
             className={`flex items-center justify-center w-10 h-10 rounded-full lg:h-12 lg:w-12 ${
               activeStep >= 2 ? "bg-primary text-background" : "bg-input"
             }  shrink-0`}
+            title="Step 2"
           >
             <DocumentCheckIcon height={20} width={20} />
           </span>
@@ -141,6 +145,7 @@ const CreateOrder = () => {
             className={`flex items-center justify-center w-10 h-10 rounded-full lg:h-12 lg:w-12 ${
               activeStep === 3 ? "bg-primary text-background" : "bg-input"
             }  shrink-0`}
+            title="Step 3"
           >
             <CheckIcon height={20} width={20} />
           </span>

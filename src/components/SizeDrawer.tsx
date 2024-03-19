@@ -186,7 +186,7 @@ const SizeDrawer = ({
     >
       <DrawerTrigger asChild>{children}</DrawerTrigger>
 
-      <DrawerContent className="">
+      <DrawerContent className="sm:max-w-2xl sm:mx-auto">
         <div className="m-5 space-y-4">
           <div>
             <Label>{name}</Label>
@@ -243,7 +243,7 @@ const SizeDrawer = ({
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full">
             <Badge variant="secondary" className="py-1 w-20 justify-center">
               {Math.floor(activeSize)}
               <sup className="pl-1">
