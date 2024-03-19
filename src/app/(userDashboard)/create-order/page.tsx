@@ -38,7 +38,7 @@ const CreateOrder = () => {
     pantCount: 0,
   });
 
-  const stepsContainerRef = useRef(null);
+  const stepsContainerRef = useRef<HTMLOListElement>(null);
 
   // scrolling to top when when changes between steps
   useEffect(() => {
