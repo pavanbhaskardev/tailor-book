@@ -132,6 +132,8 @@ const CreateOrder = () => {
           setOrderDetails={setOrderDetails}
         />
       );
+    } else {
+      return null;
     }
   };
 
