@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const QueryProvider = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = useState(
-    () =>
+    (() =>
       new QueryClient({
         defaultOptions: {
           queries: {
@@ -13,7 +13,7 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
             staleTime: 60 * 1000,
           },
         },
-      })
+      }))()
   );
 
   return (

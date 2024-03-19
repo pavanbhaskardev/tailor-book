@@ -194,7 +194,7 @@ const StepTwo = ({
         });
 
         if (showMaxSizeToaster) {
-          toast.error("Maximum file size is 5MB", { duration: 1500 });
+          return toast.error("Maximum file size is 5MB", { duration: 1500 });
         }
 
         setFilesURL((current) => [...current, ...imageURL]);
@@ -711,6 +711,7 @@ const StepTwo = ({
           <input
             id="dropzone-file"
             type="file"
+            capture="environment"
             accept="image/jpeg,image/jpg,image/png,image/webp"
             multiple
             onChange={handleFileChange}

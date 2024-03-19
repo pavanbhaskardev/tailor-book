@@ -1,7 +1,5 @@
-// "use client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-// import { useAuth } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 

@@ -37,8 +37,6 @@ export default function Error({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  console.log(error.message);
-
   useEffect(() => {
     // Log the error to an error reporting service
     console.error("there was some error", error);
