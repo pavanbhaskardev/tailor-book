@@ -32,8 +32,6 @@ const StepThree = ({
   customerDetails,
   setCustomerDetails,
 }: StepThreeTypes) => {
-  console.log(customerDetails);
-
   const url =
     process.env.NEXT_PUBLIC_BASE_URL +
     `customer-order/${orderDetails.customerId}/${orderDetails.orderId}`;

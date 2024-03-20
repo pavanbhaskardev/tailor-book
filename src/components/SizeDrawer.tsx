@@ -5,7 +5,6 @@ import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { XMarkIcon } from "@heroicons/react/16/solid";
-// import useSound from "use-sound";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { v4 as uuidv4 } from "uuid";
@@ -73,18 +72,24 @@ const SizeDrawer = ({
     status: false,
     id: "",
   });
+  // added sound interaction using the new Audio API
+  const [addSound, setAddSound] = useState<HTMLAudioElement | null>(null);
+  const [removeSound, setRemoveSound] = useState<HTMLAudioElement | null>(null);
+
   const activeHoldRef = useRef<NodeJS.Timeout>(
     null
   ) as MutableRefObject<NodeJS.Timeout>;
-  // these are for sound interaction
-  // const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
-  // const [playAddListSound] = useSound("/sounds/list_add_sound.mp3", {
-  //   volume: 0.4,
-  // });
 
   // this is to show which size to show based on the edit status
   const editSize = [...sizeList].filter(({ id }) => id === isEdit.id);
   const activeSize = isEdit.status ? editSize[0].size : size;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setAddSound(new Audio("/sounds/list_add_sound.mp3"));
+      setRemoveSound(new Audio("/sounds/list_removal_sound.mp3"));
+    }
+  }, []);
 
   // onHold functionality is achieved here
   useEffect(() => {
@@ -232,8 +237,12 @@ const SizeDrawer = ({
                         variant="secondary"
                         className="absolute w-5 h-5 -top-2 -right-2"
                         onClick={() => {
+                          if (removeSound) {
+                            removeSound.volume = 0.35;
+                            removeSound.currentTime = 0;
+                            removeSound.play();
+                          }
                           removeSize(id);
-                          // play();
                         }}
                       >
                         <XMarkIcon height={12} width={12} />
@@ -286,8 +295,12 @@ const SizeDrawer = ({
             </Button>
             <Button
               onClick={() => {
+                if (addSound) {
+                  addSound.volume = 0.5;
+                  addSound.currentTime = 0;
+                  addSound.play();
+                }
                 handleSizeList();
-                // playAddListSound();
               }}
               disabled={size === 0 && !isEdit.status}
             >

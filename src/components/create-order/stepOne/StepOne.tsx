@@ -361,7 +361,6 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
                 </Avatar>
                 <Input
                   type="file"
-                  capture="environment"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleImageChange}
                 />

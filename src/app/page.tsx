@@ -1,15 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { auth } from "@clerk/nextjs";
-import { redirect } from "next/navigation";
 
 export default function Home() {
-  const { userId } = auth();
-
-  if (userId) {
-    redirect("/orders");
-  }
-
   return (
     <main className="flex flex-col grow-0 items-start justify-center gap-2 mt-5 md:max-w-3xl mx-auto md:mt-10">
       <h1 className="text-4xl text-pretty md:text-7xl">

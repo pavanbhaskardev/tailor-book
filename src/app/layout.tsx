@@ -14,14 +14,13 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Tailor Book",
   description: "One place to track measurements & orders.",
+  metadataBase: new URL("https://tailor-book.vercel.app"),
   openGraph: {
     title: "Tailor Book",
     description: "One place to track measurements & orders.",
     images: [
       {
         url: "/og-image.png",
-        width: 800,
-        height: 600,
       },
     ],
     locale: "en_US",
@@ -44,6 +43,7 @@ export default function RootLayout({
           colorBackground: "#1c1917",
         },
       }}
+      // publishableKey=""
     >
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} tracking-wide`}>

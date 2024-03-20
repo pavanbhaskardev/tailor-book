@@ -55,11 +55,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    console.log("i entered the tryCatch");
+
     const arrayBuffer = await file.arrayBuffer(); // Convert file to Buffer
     let resizedImage;
     let resizedBuffer;
 
     if (imageCompression === "resize") {
+      console.log("i entered the profile pic resize");
+
       // compressing the image for performance
       resizedImage = sharp(arrayBuffer)
         .resize({
@@ -68,14 +72,15 @@ export async function POST(request: NextRequest) {
           fit: sharp.fit.cover,
           withoutEnlargement: true,
         })
-        .withMetadata()
         .jpeg({ quality: 80 });
     } else if (imageCompression === "compress") {
-      resizedImage = sharp(arrayBuffer).withMetadata().jpeg({ quality: 80 });
+      console.log("i entered the jpg compression pic resize");
+      resizedImage = sharp(arrayBuffer).jpeg({ quality: 80 });
     }
 
     // converting the image to buffer format again
     if (resizedImage) {
+      console.log("entered the buffer format block");
       resizedBuffer = await resizedImage.toBuffer();
     }
 
@@ -92,6 +97,7 @@ export async function POST(request: NextRequest) {
 
     // uploading the resized image to s3
     try {
+      console.log("entered the s3 tryCatch block");
       await s3.send(command);
 
       return NextResponse.json(
