@@ -36,6 +36,21 @@ const sizeOptions = [
   },
 ];
 
+// added sound interaction using the new Audio API
+const removeSound = new Audio("/sounds/list_removal_sound.mp3");
+function playRemovalSound() {
+  removeSound.currentTime = 0;
+  removeSound.volume = 0.35;
+  removeSound.play();
+}
+
+const addSound = new Audio("/sounds/list_add_sound.mp3");
+function playAddSound() {
+  addSound.currentTime = 0;
+  addSound.volume = 0.5;
+  addSound.play();
+}
+
 // this return the decimal sizes in readable format
 export const formatSize = (value: number) => {
   switch (value) {
@@ -232,8 +247,8 @@ const SizeDrawer = ({
                         variant="secondary"
                         className="absolute w-5 h-5 -top-2 -right-2"
                         onClick={() => {
+                          playRemovalSound();
                           removeSize(id);
-                          // play();
                         }}
                       >
                         <XMarkIcon height={12} width={12} />
@@ -286,8 +301,8 @@ const SizeDrawer = ({
             </Button>
             <Button
               onClick={() => {
+                playAddSound();
                 handleSizeList();
-                // playAddListSound();
               }}
               disabled={size === 0 && !isEdit.status}
             >

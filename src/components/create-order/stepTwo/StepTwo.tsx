@@ -14,11 +14,7 @@ import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { format, endOfToday } from "date-fns";
 import { toast } from "sonner";
 // import useSound from "use-sound";
-import {
-  useMutation,
-  useIsMutating,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -118,24 +114,32 @@ const StepTwo = ({
   const [filesURL, setFilesURL] = useState<FileUrlType[]>([]);
   const [note, setNote] = useState("");
   const [price, setPrice] = useState("");
-  const isMutating = useIsMutating();
   // const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
   const queryClient = useQueryClient();
 
-  const { mutateAsync: uploadImageMutation } = useMutation({
-    mutationFn: uploadImageToS3,
-    mutationKey: ["upload-to-s3"],
-  });
+  const { mutateAsync: uploadImageMutation, isPending: uploadingImages } =
+    useMutation({
+      mutationFn: uploadImageToS3,
+      mutationKey: ["upload-to-s3"],
+    });
 
-  const { mutate: createOrderMutation } = useMutation({
-    mutationFn: createNewOrder,
-    mutationKey: ["create-new-order"],
-  });
+  const { mutate: createOrderMutation, isPending: creatingOrder } = useMutation(
+    {
+      mutationFn: createNewOrder,
+      mutationKey: ["create-new-order"],
+    }
+  );
 
-  const { mutateAsync: orderIdMutation } = useMutation({
-    mutationFn: incrementOrderId,
-    mutationKey: ["new-order-id"],
-  });
+  const { mutateAsync: orderIdMutation, isPending: creatingOrderId } =
+    useMutation({
+      mutationFn: incrementOrderId,
+      mutationKey: ["new-order-id"],
+    });
+
+  // creating a new orderID
+  const userData: UserDetailsType | undefined = queryClient.getQueryData([
+    "user-details",
+  ]);
 
   // removing the created objectURL's
   useEffect(() => {
@@ -164,8 +168,6 @@ const StepTwo = ({
   // when user adds image automatically storing image in state & creating objectURL
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-
-    console.log(files);
 
     if (files) {
       const keys = Object.keys(files);
@@ -253,10 +255,24 @@ const StepTwo = ({
         return;
       }
 
-      // creating a new orderID
-      const userData: UserDetailsType | undefined = queryClient.getQueryData([
-        "user-details",
-      ]);
+      let imageURLs: string[] = [];
+
+      for (const details of filesList) {
+        await uploadImageMutation(
+          {
+            file: details.file,
+            imageCompression: "compress",
+          },
+          {
+            onSuccess: (response) => {
+              imageURLs.push(response?.data?.data);
+            },
+            onError: (error) => {
+              imageURLs.push("");
+            },
+          }
+        );
+      }
 
       let orderId = 0;
 
@@ -276,25 +292,6 @@ const StepTwo = ({
               return toast.error("Failed to create order, Please try again", {
                 duration: 1500,
               });
-            },
-          }
-        );
-      }
-
-      let imageURLs: string[] = [];
-
-      for (const details of filesList) {
-        await uploadImageMutation(
-          {
-            file: details.file,
-            imageCompression: "compress",
-          },
-          {
-            onSuccess: (response) => {
-              imageURLs.push(response?.data?.data);
-            },
-            onError: (error) => {
-              imageURLs.push("");
             },
           }
         );
@@ -707,13 +704,12 @@ const StepTwo = ({
               drop
             </p>
 
-            <p className="text-xs">Max image size is 5MB</p>
+            <p className="text-xs">Max image size is 7MB</p>
           </div>
 
           <input
             id="dropzone-file"
             type="file"
-            capture="environment"
             accept="image/jpeg,image/jpg,image/png,image/webp"
             multiple
             onChange={handleFileChange}
@@ -785,6 +781,7 @@ const StepTwo = ({
         <Button
           variant="secondary"
           size="icon"
+          disabled={uploadingImages || creatingOrder || creatingOrderId}
           onClick={() => {
             setActiveStep(1);
             setCustomerDetails({
@@ -805,10 +802,10 @@ const StepTwo = ({
         <Button
           className="gap-1"
           onClick={handleSubmit}
-          disabled={isMutating === 1}
+          disabled={uploadingImages || creatingOrder || creatingOrderId}
         >
           Create Order
-          {isMutating ? (
+          {uploadingImages || creatingOrder || creatingOrderId ? (
             <ArrowPathIcon height={20} width={20} className="animate-spin" />
           ) : (
             <ArrowRightIcon height={16} width={16} />

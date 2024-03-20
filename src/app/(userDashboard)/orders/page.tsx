@@ -169,7 +169,7 @@ const Page = () => {
         </div>
       )}
 
-      {!isEmpty(orderData) && !isLoading ? (
+      {!isEmpty(orderData) && !isLoading && (
         <>
           {orderData.map((details: OrderDetailsType, index) => (
             <OrderCard
@@ -188,7 +188,9 @@ const Page = () => {
             />
           )}
         </>
-      ) : (
+      )}
+
+      {isEmpty(orderData) && !isLoading && !isFetchingNextPage && (
         <div className="flex flex-col items-center justify-center h-[60vh] gap-2">
           <InboxIcon height={40} width={40} className="fill-muted-foreground" />
           <p className="text-muted-foreground">No order created</p>
