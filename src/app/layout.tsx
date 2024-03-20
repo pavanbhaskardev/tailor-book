@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { dark } from "@clerk/themes";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
-import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
 import QueryProvider from "@/components/QueryProvider";
 import NetworkStatusProvider from "@/components/NetworkStatusProvider";
@@ -13,6 +13,20 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Tailor Book",
+  description: "One place to track measurements & orders.",
+  openGraph: {
+    title: "Tailor Book",
+    description: "One place to track measurements & orders.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 800,
+        height: 600,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
