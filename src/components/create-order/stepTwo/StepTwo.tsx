@@ -79,8 +79,8 @@ const variants = {
   },
 };
 
-// max image size is 5MB
-const maxFileSize = 1024 * 1024 * 5;
+// max image size is 7MB
+const maxFileSize = 1024 * 1024 * 7;
 
 const StepTwo = ({
   customerDetails,
@@ -164,6 +164,8 @@ const StepTwo = ({
   // when user adds image automatically storing image in state & creating objectURL
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
+
+    console.log(files);
 
     if (files) {
       const keys = Object.keys(files);

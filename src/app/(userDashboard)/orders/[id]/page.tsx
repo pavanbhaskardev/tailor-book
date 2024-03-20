@@ -246,7 +246,7 @@ const Page = ({ params }: { params: { id: string } }) => {
               </div>
             </div>
 
-            <a href={`tel:+${data?.customerDetails?.number}`}>
+            <a href={`tel:+91${data?.customerDetails?.number}`}>
               <Button size="icon">
                 <PhoneIcon height={16} width={16} />
               </Button>

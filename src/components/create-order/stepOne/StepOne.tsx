@@ -80,7 +80,7 @@ const handleDebounce = debounce((refetch) => {
   refetch();
 }, 800);
 
-const maxFileSize = 1024 * 1024 * 5;
+const maxFileSize = 1024 * 1024 * 7;
 
 const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
   const [size, setSize] = useState<number>(0);

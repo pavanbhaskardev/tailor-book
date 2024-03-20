@@ -3,7 +3,7 @@ import { UserProfile } from "@clerk/nextjs";
 
 const Profile = () => {
   return (
-    <div className="w-max -translate-x-[20%]">
+    <div className="w-max lg:-translate-x-[20%]">
       <UserProfile
         appearance={{
           variables: {

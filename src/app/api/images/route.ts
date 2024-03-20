@@ -12,7 +12,7 @@ const s3 = new S3Client({
   },
 });
 
-const maxFileSize = 1024 * 1024 * 5;
+const maxFileSize = 1024 * 1024 * 7;
 
 export async function POST(request: NextRequest) {
   const fileData = await request.formData();
@@ -68,9 +68,10 @@ export async function POST(request: NextRequest) {
           fit: sharp.fit.cover,
           withoutEnlargement: true,
         })
-        .jpeg();
+        .withMetadata()
+        .jpeg({ quality: 80 });
     } else if (imageCompression === "compress") {
-      resizedImage = sharp(arrayBuffer).jpeg({ quality: 85 });
+      resizedImage = sharp(arrayBuffer).withMetadata().jpeg({ quality: 80 });
     }
 
     // converting the image to buffer format again
