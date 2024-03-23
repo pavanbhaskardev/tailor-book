@@ -5,5 +5,5 @@ export default function UserDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="sm:max-w-2xl sm:mx-auto">{children}</div>;
+  return <div className="sm:max-w-2xl sm:mx-auto h-full">{children}</div>;
 }

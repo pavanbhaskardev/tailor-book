@@ -15,9 +15,13 @@ const s3 = new S3Client({
 const maxFileSize = 1024 * 1024 * 7;
 
 export async function POST(request: NextRequest) {
+  console.log("i've entered API endpoint");
+
   const fileData = await request.formData();
-  const file = fileData.getAll("file")[0] as File;
-  const imageCompression = fileData.get("imageCompression") as string;
+  const file: File | null = fileData.get("file") as unknown as File;
+  const imageCompression: string | null = fileData.get(
+    "imageCompression"
+  ) as unknown as string;
   const { userId } = auth();
   const uniqueFileName = uuidv4();
 
@@ -28,13 +32,13 @@ export async function POST(request: NextRequest) {
     "image/webp",
   ];
 
-  // checking if the user is authenticated or not
-  if (!userId) {
+  // user haven't specified any file
+  if (!file || !imageCompression) {
     return NextResponse.json(
       {
-        message: "Unauthenticated",
+        message: "Required field are missing",
       },
-      { status: 401 }
+      { status: 400 }
     );
   }
 
@@ -72,10 +76,11 @@ export async function POST(request: NextRequest) {
           fit: sharp.fit.cover,
           withoutEnlargement: true,
         })
+        .withMetadata()
         .jpeg({ quality: 80 });
     } else if (imageCompression === "compress") {
       console.log("i entered the jpg compression pic resize");
-      resizedImage = sharp(arrayBuffer).jpeg({ quality: 80 });
+      resizedImage = sharp(arrayBuffer).withMetadata().jpeg({ quality: 80 });
     }
 
     // converting the image to buffer format again
@@ -91,7 +96,7 @@ export async function POST(request: NextRequest) {
       Body: resizedBuffer,
       ContentType: file.type,
       Metadata: {
-        userId,
+        userId: userId || "",
       },
     });
 

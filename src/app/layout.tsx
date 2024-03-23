@@ -43,7 +43,7 @@ export default function RootLayout({
           colorBackground: "#1c1917",
         },
       }}
-      // publishableKey=""
+      publishableKey={process.env.CLERK_PUBLISHABLE_KEY}
     >
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} tracking-wide`}>
@@ -56,7 +56,12 @@ export default function RootLayout({
             <QueryProvider>
               <NetworkStatusProvider>
                 <Navbar />
-                <main className="px-4 py-3 overflow-x-hidden">{children}</main>
+                <main
+                  className="px-4 py-3 overflow-x-hidden"
+                  style={{ height: "calc(100vh - 60px)" }}
+                >
+                  {children}
+                </main>
               </NetworkStatusProvider>
             </QueryProvider>
             <Toaster richColors />
