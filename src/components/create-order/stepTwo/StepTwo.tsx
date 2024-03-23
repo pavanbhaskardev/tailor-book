@@ -197,7 +197,7 @@ const StepTwo = ({
         });
 
         if (showMaxSizeToaster) {
-          return toast.error("Maximum file size is 5MB", { duration: 1500 });
+          return toast.error("Maximum file size is 7MB", { duration: 1500 });
         }
 
         setFilesURL((current) => [...current, ...imageURL]);
@@ -256,6 +256,7 @@ const StepTwo = ({
 
       let imageURLs: string[] = [];
 
+      console.log("images API hitted");
       for (const details of filesList) {
         await uploadImageMutation(
           {
@@ -345,7 +346,7 @@ const StepTwo = ({
   }, [errorStatus.dateStatus, errorStatus.priceStatus]);
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-8 pb-4">
       {/* customer name & number */}
       <div className="flex gap-3 items-center">
         <Avatar className="h-14 w-14">
