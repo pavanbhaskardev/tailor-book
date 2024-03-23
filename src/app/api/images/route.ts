@@ -14,6 +14,15 @@ const s3 = new S3Client({
 
 const maxFileSize = 1024 * 1024 * 7;
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "8mb", // Increase the limit to 8MB (adjust as needed)
+    },
+    maxDuration: 10,
+  },
+};
+
 export async function POST(request: NextRequest) {
   console.log("i've entered API endpoint");
 
