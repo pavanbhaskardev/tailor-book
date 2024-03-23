@@ -32,6 +32,15 @@ export async function POST(request: NextRequest) {
     "image/webp",
   ];
 
+  if (!userId) {
+    return NextResponse.json(
+      {
+        message: "Unauthenticated",
+      },
+      { status: 401 }
+    );
+  }
+
   // user haven't specified any file
   if (!file || !imageCompression) {
     return NextResponse.json(

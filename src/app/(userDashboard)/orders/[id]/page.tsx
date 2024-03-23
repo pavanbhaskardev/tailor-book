@@ -177,7 +177,7 @@ const Page = ({ params }: { params: { id: string } }) => {
       : data?.newPantSize;
 
     return (
-      <section className="mt-2">
+      <section className="mt-2 pb-4">
         <Carousel className="w-full my-3" setApi={setApi}>
           <CarouselContent>
             {data?.orderPhotos.map((src, index) => (
