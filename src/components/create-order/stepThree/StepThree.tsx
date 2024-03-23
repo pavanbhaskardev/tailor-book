@@ -70,7 +70,7 @@ const StepThree = ({
   };
 
   return (
-    <section>
+    <section className="pb-4">
       <div className="p-3 bg-white rounded-sm max-w-max mx-auto">
         <QRCodeSVG
           value={url}

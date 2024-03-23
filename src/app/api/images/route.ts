@@ -63,13 +63,12 @@ export async function POST(request: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer(); // Convert file to Buffer
     let resizedImage;
-    let resizedBuffer;
 
     if (imageCompression === "resize") {
       console.log("i entered the profile pic resize");
 
       // compressing the image for performance
-      resizedImage = sharp(arrayBuffer)
+      resizedImage = await sharp(arrayBuffer)
         .resize({
           width: 400,
           height: 400,
@@ -77,23 +76,21 @@ export async function POST(request: NextRequest) {
           withoutEnlargement: true,
         })
         .withMetadata()
-        .jpeg({ quality: 80 });
+        .jpeg({ quality: 80 })
+        .toBuffer();
     } else if (imageCompression === "compress") {
       console.log("i entered the jpg compression pic resize");
-      resizedImage = sharp(arrayBuffer).withMetadata().jpeg({ quality: 80 });
-    }
-
-    // converting the image to buffer format again
-    if (resizedImage) {
-      console.log("entered the buffer format block");
-      resizedBuffer = await resizedImage.toBuffer();
+      resizedImage = await sharp(arrayBuffer)
+        .withMetadata()
+        .jpeg({ quality: 80 })
+        .toBuffer();
     }
 
     // changed from presigned URL to putObject
     const command = new PutObjectCommand({
       Bucket: process.env.AWS_BUCKET_NAME!,
       Key: uniqueFileName,
-      Body: resizedBuffer,
+      Body: resizedImage,
       ContentType: file.type,
       Metadata: {
         userId: userId || "",

@@ -301,7 +301,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
   };
 
   return (
-    <Tabs defaultValue="newCustomer" className="mt-4">
+    <Tabs defaultValue="newCustomer" className="pb-4">
       <TabsList className="grid w-full grid-cols-2 mb-4">
         <TabsTrigger value="newCustomer">New Customer</TabsTrigger>
         <TabsTrigger value="oldCustomer">Old Customer</TabsTrigger>
