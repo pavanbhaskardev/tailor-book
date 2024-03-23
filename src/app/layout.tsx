@@ -43,7 +43,7 @@ export default function RootLayout({
           colorBackground: "#1c1917",
         },
       }}
-      publishableKey={process.env.CLERK_PUBLISHABLE_KEY}
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} tracking-wide`}>
