@@ -20,7 +20,7 @@ export const uploadImageToS3 = async ({
     method: "POST",
     data: formData,
     headers: {
-      "Content-Type": file.type,
+      "Content-Type": "multipart/form-data",
     },
   });
 };

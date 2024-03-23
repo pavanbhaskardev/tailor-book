@@ -13,8 +13,8 @@ import { isEmpty } from "ramda";
 import { ArrowPathIcon, InboxIcon } from "@heroicons/react/24/solid";
 import debounce from "lodash.debounce";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import Search from "@/components/Search";
 import { useUser } from "@clerk/nextjs";
+import Search from "@/components/Search";
 import { Button } from "@/components/ui/button";
 import axiosConfig from "@/utils/axiosConfig";
 import { OrderDetailsType } from "@/utils/interfaces";
@@ -150,7 +150,7 @@ const Page = () => {
   };
 
   return (
-    <section className="relative no-scrollbar">
+    <section className="relative no-scrollbar h-full">
       <Search
         className="mt-1 mb-4"
         value={searchWord}
