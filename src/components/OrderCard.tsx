@@ -43,49 +43,44 @@ const OrderCard = ({
   const quantity = details.shirtCount + details.pantCount;
 
   return (
-    <motion.div
-      variants={variants}
-      initial="initial"
-      animate="animate"
-      transition={{
-        delay: 0.05 * index,
-        ease: [0.33, 1, 0.68, 1],
-      }}
-      className="flex gap-4 items-center bg-card p-3 mb-3 rounded-md"
-      ref={lastElement}
-    >
-      <img
-        src={details?.orderPhotos[0]}
-        alt="order_image"
-        className="h-[110px] w-[120px] object-cover rounded-sm"
-      />
+    <Link href={`/orders/${details?.orderId}`}>
+      <motion.div
+        variants={variants}
+        initial="initial"
+        animate="animate"
+        transition={{
+          delay: 0.05 * index,
+          ease: [0.33, 1, 0.68, 1],
+        }}
+        className="flex gap-4 items-center bg-card p-3 mb-3 rounded-md hover:bg-stone-800"
+        ref={lastElement}
+      >
+        <img
+          src={details?.orderPhotos[0]}
+          alt="order_image"
+          className="h-[110px] w-[120px] object-cover rounded-sm"
+        />
 
-      <div className="flex flex-col gap-1 grow">
-        <div className="flex w-full justify-between items-end">
-          <p className="font-medium leading-5"># {details?.orderId}</p>
-          <Badge className={badgeColor[details?.status]}>
-            {displayStatus[details?.status]}
-          </Badge>
+        <div className="flex flex-col gap-1 grow">
+          <div className="flex w-full justify-between items-end">
+            <p className="font-medium leading-5"># {details?.orderId}</p>
+            <Badge className={badgeColor[details?.status]}>
+              {displayStatus[details?.status]}
+            </Badge>
+          </div>
+
+          <p className="text-[12px] mt-4">
+            <span className="text-muted-foreground">Delivery: </span>
+            {format(details?.deliveryDate, "PPP")}
+          </p>
+
+          <p className="text-[12px]">
+            <span className="text-muted-foreground">Qty: </span>
+            {quantity}
+          </p>
         </div>
-
-        <p className="text-[12px] mt-4">
-          <span className="text-muted-foreground">Delivery: </span>
-          {format(details?.deliveryDate, "PPP")}
-        </p>
-
-        <p className="text-[12px]">
-          <span className="text-muted-foreground">Qty: </span>
-          {quantity}
-        </p>
-
-        <Link
-          href={`/orders/${details?.orderId}`}
-          className="text-[12px] text-primary cursor-pointer hover:underline"
-        >
-          Details
-        </Link>
-      </div>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 };
 

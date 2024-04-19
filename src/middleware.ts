@@ -6,7 +6,6 @@ export default authMiddleware({
     "/",
     "/support",
     "/api/customer-order",
-    "/api/images",
     "/(customer-order)(.*)",
   ],
   ignoredRoutes: ["/support"],
