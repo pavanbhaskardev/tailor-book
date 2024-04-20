@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import { uploadImageToS3 } from "@/utils/commonApi";
+import { getPresignedURL, uploadToPresignedURL } from "@/utils/commonApi";
 import { createNewOrder } from "@/utils/commonApi";
 import { incrementOrderId } from "@/utils/commonApi";
 
@@ -113,14 +113,21 @@ const StepTwo = ({
   const [filesURL, setFilesURL] = useState<FileUrlType[]>([]);
   const [note, setNote] = useState("");
   const [price, setPrice] = useState("");
-  // const [play] = useSound("/sounds/list_removal_sound.mp3", { volume: 0.25 });
   const queryClient = useQueryClient();
 
-  const { mutateAsync: uploadImageMutation, isPending: uploadingImages } =
+  const { mutateAsync: presignedURLMutation, isPending: presignedURLLoading } =
     useMutation({
-      mutationFn: uploadImageToS3,
-      mutationKey: ["upload-to-s3"],
+      mutationFn: getPresignedURL,
+      mutationKey: ["presigned-url"],
     });
+
+  const {
+    mutateAsync: uploadToPresignedURLMutation,
+    isPending: uploadPresignedURLLoading,
+  } = useMutation({
+    mutationFn: uploadToPresignedURL,
+    mutationKey: ["upload-to-presigned-url"],
+  });
 
   const { mutate: createOrderMutation, isPending: creatingOrder } = useMutation(
     {
@@ -256,22 +263,32 @@ const StepTwo = ({
 
       let imageURLs: string[] = [];
 
-      console.log("images API hitted");
-      for (const details of filesList) {
-        await uploadImageMutation(
+      for await (const details of filesList) {
+        let url = "";
+
+        await presignedURLMutation(
+          { size: details.file.size, type: details.file.type },
           {
-            file: details.file,
-            imageCompression: "compress",
-          },
-          {
-            onSuccess: (response) => {
-              imageURLs.push(response?.data?.data);
-            },
-            onError: (error) => {
-              imageURLs.push("");
+            onSuccess: async (response) => {
+              url = response?.data?.data;
             },
           }
         );
+
+        if (url) {
+          await uploadToPresignedURLMutation(
+            { file: details.file, url },
+            {
+              onSuccess: (response) => {
+                const uploadedURL = url.split("?")[0];
+
+                if (response.status === 200) {
+                  imageURLs.push(uploadedURL);
+                }
+              },
+            }
+          );
+        }
       }
 
       let orderId = 0;
@@ -704,7 +721,9 @@ const StepTwo = ({
               drop
             </p>
 
-            <p className="text-xs">Max image size is 7MB</p>
+            <p className="text-xs">
+              Max no.of images 3, Max size per image is 7MB
+            </p>
           </div>
 
           <input
@@ -781,7 +800,12 @@ const StepTwo = ({
         <Button
           variant="secondary"
           size="icon"
-          disabled={uploadingImages || creatingOrder || creatingOrderId}
+          disabled={
+            presignedURLLoading ||
+            creatingOrder ||
+            creatingOrderId ||
+            uploadPresignedURLLoading
+          }
           onClick={() => {
             setActiveStep(1);
             setCustomerDetails({
@@ -802,10 +826,18 @@ const StepTwo = ({
         <Button
           className="gap-1"
           onClick={handleSubmit}
-          disabled={uploadingImages || creatingOrder || creatingOrderId}
+          disabled={
+            presignedURLLoading ||
+            creatingOrder ||
+            creatingOrderId ||
+            uploadPresignedURLLoading
+          }
         >
           Create Order
-          {uploadingImages || creatingOrder || creatingOrderId ? (
+          {presignedURLLoading ||
+          creatingOrder ||
+          creatingOrderId ||
+          uploadPresignedURLLoading ? (
             <ArrowPathIcon height={20} width={20} className="animate-spin" />
           ) : (
             <ArrowRightIcon height={16} width={16} />

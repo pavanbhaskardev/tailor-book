@@ -26,6 +26,37 @@ export const uploadImageToS3 = async ({
   });
 };
 
+export const getPresignedURL = async ({
+  size,
+  type,
+}: {
+  size: number;
+  type: string;
+}) => {
+  return axiosConfig({
+    url: "api/images/presigned-url",
+    method: "POST",
+    data: { size, type },
+  });
+};
+
+export const uploadToPresignedURL = async ({
+  file,
+  url,
+}: {
+  file: File;
+  url: string;
+}) => {
+  return axiosConfig({
+    url,
+    method: "PUT",
+    data: file,
+    headers: {
+      "Content-Type": file.type,
+    },
+  });
+};
+
 export const createNewCustomer = async ({
   userId,
   customerId,
