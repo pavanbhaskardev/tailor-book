@@ -42,3 +42,12 @@ export type EmailPayloadType = {
   url: string;
   errorMessage: string;
 };
+
+export interface OldCustomerAPIType {
+  id: string;
+  limit: number;
+  offset: number;
+  searchWord: string;
+  sortBy: string;
+  signal: AbortSignal;
+}

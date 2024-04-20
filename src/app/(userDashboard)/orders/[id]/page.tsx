@@ -184,7 +184,7 @@ const Page = ({ params }: { params: { id: string } }) => {
               <CarouselItem key={index}>
                 <img
                   alt="order-image"
-                  className="aspect-square object-cover rounded-sm sm:h-[500px] sm:aspect-video"
+                  className="aspect-square object-cover rounded-sm max-h-[500px] sm:aspect-video"
                   src={src}
                 />
               </CarouselItem>

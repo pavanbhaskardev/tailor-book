@@ -1,7 +1,10 @@
 import axiosConfig from "./axiosConfig";
-import { CustomerDetails } from "./interfaces";
-import { OrderDetailsType } from "./interfaces";
-import { UserDetailsType } from "./interfaces";
+import {
+  UserDetailsType,
+  OldCustomerAPIType,
+  OrderDetailsType,
+  CustomerDetails,
+} from "./interfaces";
 
 // Uploads the image to the s3 and return the image URL
 export const uploadImageToS3 = async ({
@@ -117,5 +120,33 @@ export const getCustomerOrderDetails = async ({
     return response?.data?.data?.[0];
   } catch (error: unknown) {
     throw new Error(`Failed to get customer order ${error}`);
+  }
+};
+
+export const getOldCustomersList = async ({
+  id,
+  limit,
+  offset,
+  searchWord,
+  sortBy,
+  signal,
+}: OldCustomerAPIType) => {
+  try {
+    const response = await axiosConfig({
+      url: "api/customer",
+      method: "GET",
+      params: {
+        id,
+        limit,
+        offset,
+        searchWord: searchWord.trim(),
+        sortBy,
+      },
+      signal,
+    });
+
+    return response?.data?.data || [];
+  } catch (error: unknown) {
+    throw new Error(`failed to get customers list: ${error}`);
   }
 };

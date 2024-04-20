@@ -11,7 +11,6 @@ import Link from "next/link";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { isEmpty } from "ramda";
 import { ArrowPathIcon, InboxIcon } from "@heroicons/react/24/solid";
-import debounce from "lodash.debounce";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useUser } from "@clerk/nextjs";
 import Search from "@/components/Search";
@@ -19,11 +18,7 @@ import { Button } from "@/components/ui/button";
 import axiosConfig from "@/utils/axiosConfig";
 import { OrderDetailsType } from "@/utils/interfaces";
 import OrderCard from "@/components/OrderCard";
-
-// this will call the refetch fn after a debounce
-const handleDebounce = debounce((refetch) => {
-  refetch();
-}, 800);
+import useDebounce from "@/utils/useDebounce";
 
 const Page = () => {
   const { user } = useUser();
@@ -31,6 +26,7 @@ const Page = () => {
     null
   ) as MutableRefObject<IntersectionObserver>;
   const [searchWord, setSearchWord] = useState("");
+  const debouncedValue = useDebounce({ value: searchWord, delay: 800 });
 
   const createNewUser = async () => {
     try {
@@ -67,7 +63,7 @@ const Page = () => {
           userId: user?.id,
           limit: 10,
           offset: pageParam,
-          searchWord,
+          searchWord: debouncedValue,
         },
         signal,
       });
@@ -95,7 +91,7 @@ const Page = () => {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["order-list"],
+    queryKey: ["order-list", debouncedValue],
     queryFn: ({ pageParam, signal }) => getAllOrders({ pageParam, signal }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
@@ -145,8 +141,6 @@ const Page = () => {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchWord(e.target.value);
-
-    handleDebounce(refetch);
   };
 
   return (
@@ -156,7 +150,6 @@ const Page = () => {
         value={searchWord}
         placeholder="Search"
         onChange={handleChange}
-        spin={(isLoading || isFetchingNextPage) && !isEmpty(searchWord)}
       />
 
       {isLoading && (

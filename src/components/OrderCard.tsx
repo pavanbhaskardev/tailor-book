@@ -56,7 +56,7 @@ const OrderCard = ({
         ref={lastElement}
       >
         <img
-          src={details?.orderPhotos[0]}
+          src={details?.orderPhotos?.[0]}
           alt="order_image"
           className="h-[110px] w-[120px] object-cover rounded-sm"
         />

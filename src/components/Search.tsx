@@ -1,13 +1,12 @@
 import React, { ChangeEvent } from "react";
 import { Input } from "./ui/input";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
-import { ArrowPathIcon } from "@heroicons/react/24/solid";
 
 interface SearchProps {
   placeholder: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  spin: boolean;
+  spin?: boolean;
   className?: string;
 }
 
@@ -15,7 +14,6 @@ const Search = ({
   placeholder,
   onChange,
   value,
-  spin,
   className = "",
 }: SearchProps) => {
   return (
@@ -32,13 +30,6 @@ const Search = ({
         onChange={onChange}
         className="px-9"
       />
-      {spin && (
-        <ArrowPathIcon
-          height={20}
-          width={20}
-          className="absolute top-[0.5rem] right-2 animate-spin fill-muted-foreground"
-        />
-      )}
     </div>
   );
 };

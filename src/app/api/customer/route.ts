@@ -18,6 +18,7 @@ export async function GET(request: Request) {
   const limitValue = limit ? +limit : 10;
   const offsetValue = offset ? +offset : 0;
   const searchWord = searchParams.get("searchWord") || "";
+  const sortBy = searchParams.get("sortBy") || "asc";
   let query: Query = {};
   const regex = /^[0-9]+$/;
 
@@ -50,9 +51,9 @@ export async function GET(request: Request) {
       userId: id,
       ...query,
     })
-      .sort({ name: 1 })
+      .sort({ name: sortBy === "asc" ? 1 : -1 })
       .limit(limitValue)
-      .skip(offsetValue * limitValue);
+      .skip(offsetValue);
 
     return NextResponse.json({ data: response }, { status: 200 });
   } catch (error: unknown) {

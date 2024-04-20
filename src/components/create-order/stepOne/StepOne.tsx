@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowPathIcon, ArrowRightIcon } from "@heroicons/react/16/solid";
 import { isEmpty } from "ramda";
 import { CustomerDetails, SizeList } from "@/utils/interfaces";
-import axiosConfig from "@/utils/axiosConfig";
 import { useAuth } from "@clerk/nextjs";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,58 +26,20 @@ import { type FieldValues, useForm } from "react-hook-form";
 import { formatSize } from "@/components/SizeDrawer";
 import SizeDrawer from "@/components/SizeDrawer";
 import { PlusIcon } from "@heroicons/react/16/solid";
-import debounce from "lodash.debounce";
 import { useQuery, useMutation, useIsMutating } from "@tanstack/react-query";
 import { RadioGroup } from "@/components/ui/radio-group";
 import UserOption from "./UserOption";
-import { uploadImageToS3, createNewCustomer } from "@/utils/commonApi";
-
-interface ApiDetails {
-  id: string;
-  limit: number;
-  offset: number;
-  searchWord: string;
-  setSelectedCustomerId: React.Dispatch<React.SetStateAction<string>>;
-}
+import {
+  uploadImageToS3,
+  createNewCustomer,
+  getOldCustomersList,
+} from "@/utils/commonApi";
+import useDebounce from "@/utils/useDebounce";
 
 interface StepOneProps {
   setCustomerDetails: React.Dispatch<React.SetStateAction<CustomerDetails>>;
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
 }
-
-// this will get the list of all the customers
-const getOldCustomersList = async ({
-  id,
-  limit,
-  offset,
-  searchWord,
-  setSelectedCustomerId,
-}: ApiDetails) => {
-  try {
-    // whenever on API setting the selectedCustomerId to empty
-    setSelectedCustomerId("");
-
-    const response = await axiosConfig({
-      url: "api/customer",
-      method: "GET",
-      params: {
-        id,
-        limit,
-        offset,
-        searchWord: searchWord.trim(),
-      },
-    });
-
-    return response?.data?.data || [];
-  } catch (error: unknown) {
-    throw new Error(`failed to get customers list: ${error}`);
-  }
-};
-
-// this will call the refetch fn after a debounce
-const handleDebounce = debounce((refetch) => {
-  refetch();
-}, 800);
 
 const maxFileSize = 1024 * 1024 * 7;
 
@@ -96,6 +57,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
   const [avatarURL, setAvatarURL] = useState<string>("");
   const [searchWord, setSearchWord] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const debouncedValue = useDebounce({ value: searchWord, delay: 800 });
   const { userId } = useAuth();
   const btnRef = useRef<HTMLButtonElement>(null);
   const isMutating = useIsMutating();
@@ -106,15 +68,18 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["old-customers-list"],
-    queryFn: () =>
-      getOldCustomersList({
-        searchWord,
+    queryKey: ["old-customers-list", debouncedValue],
+    queryFn: ({ signal }) => {
+      setSelectedCustomerId("");
+      return getOldCustomersList({
+        searchWord: debouncedValue,
         id: userId || "",
         offset: 0,
         limit: 20,
-        setSelectedCustomerId,
-      }),
+        sortBy: "asc",
+        signal,
+      });
+    },
   });
 
   const { mutateAsync: uploadImageMutation } = useMutation({
@@ -274,8 +239,6 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchWord(e.target.value);
-
-    handleDebounce(refetch);
   };
 
   // triggered when old customers selected
@@ -474,7 +437,6 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
           placeholder="Enter customer name"
           value={searchWord}
           onChange={handleChange}
-          spin={isLoading || isFetching}
         />
 
         <RadioGroup
@@ -496,6 +458,14 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
         oldCustomersData ? (
           <p className="text-center">No results found!</p>
         ) : null}
+
+        {isLoading && (
+          <ArrowPathIcon
+            height={24}
+            width={24}
+            className="animate-spin fill-muted-foreground mx-auto"
+          />
+        )}
 
         <Button
           type="submit"
