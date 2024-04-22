@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           message: "Successfully uploaded image to s3",
-          data: `${process.env.AWS_BUCKET_FULL_URL}${uniqueFileName}`,
+          data: `${process.env.NEXT_PUBLIC_AWS_BUCKET_FULL_URL}${uniqueFileName}`,
         },
         { status: 201 }
       );

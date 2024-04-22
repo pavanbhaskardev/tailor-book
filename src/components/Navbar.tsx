@@ -78,7 +78,7 @@ const Navbar = () => {
         </SheetTrigger>
         <SheetContent className="pt-10">
           {user ? (
-            <div className="grid ">
+            <div className="grid">
               <SheetHeader>
                 <Avatar className="h-11 w-11 mb-2">
                   <AvatarImage src={imageSrc} alt={user?.fullName || ""} />

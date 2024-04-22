@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useRef,
   MutableRefObject,
+  Fragment,
 } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import Search from "@/components/Search";
@@ -152,7 +153,7 @@ const Page = () => {
         <div className="h-[calc(100vh-124px)] overflow-y-scroll no-scrollbar">
           {Object.keys(formattedData).map((key, index) => {
             return (
-              <>
+              <Fragment key={index + key}>
                 <div className="w-full sticky top-0 z-10 text-muted-foreground font-medium bg-[#121212]">
                   {key}
                 </div>
@@ -162,7 +163,7 @@ const Page = () => {
                     return (
                       <CustomerOption
                         details={details}
-                        key={uniqueKey}
+                        key={uniqueKey + details.customerId}
                         lastElement={
                           totalLength === index + 1 &&
                           uniqueKey + 1 === formattedData[key].length
@@ -173,7 +174,7 @@ const Page = () => {
                     );
                   }
                 )}
-              </>
+              </Fragment>
             );
           })}
 

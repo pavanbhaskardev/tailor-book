@@ -1,11 +1,11 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 import { format } from "date-fns";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowPathIcon, InboxIcon, PhoneIcon } from "@heroicons/react/24/solid";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 
 import {
   Carousel,
@@ -181,10 +181,12 @@ const Page = ({ params }: { params: { id: string } }) => {
         <Carousel className="w-full my-3" setApi={setApi}>
           <CarouselContent>
             {data?.orderPhotos.map((src, index) => (
-              <CarouselItem key={index}>
-                <img
-                  alt="order-image"
-                  className="aspect-square object-cover rounded-sm max-h-[500px] sm:aspect-video"
+              <CarouselItem key={index} className="relative w-full">
+                <Image
+                  alt={`order-image-${index}`}
+                  height={300}
+                  width={500}
+                  className="aspect-square object-cover rounded-sm md:h-[500px] w-full sm:aspect-video"
                   src={src}
                 />
               </CarouselItem>
