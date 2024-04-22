@@ -1,9 +1,9 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 import React, { useEffect, useState } from "react";
 import { isEmpty } from "ramda";
 import { InboxIcon } from "@heroicons/react/24/solid";
 import { format } from "date-fns";
+import Image from "next/image";
 import {
   Carousel,
   CarouselContent,
@@ -77,9 +77,11 @@ const OrderDetailsCard = ({
           <CarouselContent>
             {data?.orderPhotos.map((src, index) => (
               <CarouselItem key={index}>
-                <img
-                  alt="order-image"
-                  className="aspect-square object-cover rounded-sm sm:h-[500px] sm:aspect-video"
+                <Image
+                  alt={`order-image-${index}`}
+                  height={300}
+                  width={500}
+                  className="aspect-square object-cover rounded-sm md:h-[500px] w-full sm:aspect-video"
                   src={src}
                 />
               </CarouselItem>

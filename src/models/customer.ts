@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const customerSchema = new Schema(
   {
-    userId: { type: String, required: true, immutable: true, unique: true },
+    userId: { type: String, required: true, immutable: true },
     customerId: { type: String, required: true, immutable: true, unique: true },
     name: { type: String, required: true, lowercase: true, trim: true },
     number: { type: Number, required: true },

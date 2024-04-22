@@ -1,8 +1,8 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 import React from "react";
 import { format } from "date-fns";
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "./ui/badge";
 import { motion } from "framer-motion";
 import { OrderDetailsType } from "@/utils/interfaces";
@@ -55,9 +55,11 @@ const OrderCard = ({
         className="flex gap-4 items-center bg-card p-3 mb-3 rounded-md hover:bg-stone-800"
         ref={lastElement}
       >
-        <img
-          src={details?.orderPhotos[0]}
-          alt="order_image"
+        <Image
+          height={110}
+          width={120}
+          src={details?.orderPhotos?.[0]}
+          alt={`order_image_${index}`}
           className="h-[110px] w-[120px] object-cover rounded-sm"
         />
 
