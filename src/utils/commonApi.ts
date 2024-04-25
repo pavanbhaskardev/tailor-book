@@ -130,6 +130,7 @@ export const getOldCustomersList = async ({
   searchWord,
   sortBy,
   signal,
+  customerId,
 }: OldCustomerAPIType) => {
   try {
     const response = await axiosConfig({
@@ -141,6 +142,7 @@ export const getOldCustomersList = async ({
         offset,
         searchWord: searchWord.trim(),
         sortBy,
+        customerId,
       },
       signal,
     });

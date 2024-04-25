@@ -68,7 +68,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["old-customers-list", debouncedValue],
+    queryKey: ["old-customers-search-list", debouncedValue],
     queryFn: ({ signal }) => {
       setSelectedCustomerId("");
       return getOldCustomersList({

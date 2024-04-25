@@ -48,6 +48,7 @@ export interface OldCustomerAPIType {
   limit: number;
   offset: number;
   searchWord: string;
-  sortBy: string;
+  sortBy?: string;
   signal: AbortSignal;
+  customerId?: string;
 }
