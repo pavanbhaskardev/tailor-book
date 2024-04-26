@@ -189,7 +189,7 @@ const CustomerDetailsPage = ({ params }: { params: { id: string } }) => {
                 )}
 
                 {!isEmpty(details.pantSize) && details.pantSize && (
-                  <p className="text-sm">
+                  <p className="text-sm mt-1">
                     <span className="text-muted-foreground">Pant Size: </span>
                     {details.pantSize.map((size, index) => {
                       const quarter = size - Math.floor(size);
@@ -213,6 +213,7 @@ const CustomerDetailsPage = ({ params }: { params: { id: string } }) => {
           <EditDetailsForm
             setShowForm={setShowForm}
             customerDetails={details}
+            userId={userId}
           />
         )}
 
@@ -253,7 +254,7 @@ const CustomerDetailsPage = ({ params }: { params: { id: string } }) => {
     );
   }
 
-  if (!isLoading && isEmpty(data || {})) {
+  if (!isLoading && isEmpty(data || [])) {
     return <p className="text-center mt-80">Customer details not found!</p>;
   }
 };

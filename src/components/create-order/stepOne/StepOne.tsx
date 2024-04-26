@@ -41,7 +41,7 @@ interface StepOneProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const maxFileSize = 1024 * 1024 * 7;
+const maxFileSize = 1024 * 1024 * 4;
 
 const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
   const [size, setSize] = useState<number>(0);
@@ -138,7 +138,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
       return;
     }
 
-    // if user uploaded image greater than 10mb exiting api call
+    // if user uploaded image greater than 4mb exiting api call
     if (imageFile && imageFile.size > maxFileSize) {
       return;
     }
@@ -152,12 +152,9 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
         },
         {
           onSuccess: (response) => {
-            console.log(response);
-
             imageURL = response?.data?.data;
           },
           onError: (error) => {
-            console.log(error);
             imageURL = "";
           },
         }
@@ -331,7 +328,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
 
               {errorStatus.imageSizeStatus && (
                 <FormDescription className="text-destructive">
-                  File size can&apos;t be greater than 5MB
+                  File size can&apos;t be greater than 4MB
                 </FormDescription>
               )}
             </div>

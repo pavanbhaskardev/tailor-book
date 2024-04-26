@@ -1,4 +1,8 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import sharp from "sharp";
 import { NextResponse, type NextRequest } from "next/server";
 import { v4 as uuidv4 } from "uuid";
@@ -15,8 +19,6 @@ const s3 = new S3Client({
 const maxFileSize = 1024 * 1024 * 7;
 
 export async function POST(request: NextRequest) {
-  console.log("i've entered API endpoint");
-
   const fileData = await request.formData();
   const file: File | null = fileData.get("file") as unknown as File;
   const imageCompression: string | null = fileData.get(
@@ -68,14 +70,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    console.log("i entered the tryCatch");
-
     const arrayBuffer = await file.arrayBuffer(); // Convert file to Buffer
     let resizedImage;
 
     if (imageCompression === "resize") {
-      console.log("i entered the profile pic resize");
-
       // compressing the image for performance
       resizedImage = await sharp(arrayBuffer)
         .resize({
@@ -88,7 +86,6 @@ export async function POST(request: NextRequest) {
         .jpeg({ quality: 80 })
         .toBuffer();
     } else if (imageCompression === "compress") {
-      console.log("i entered the jpg compression pic resize");
       resizedImage = await sharp(arrayBuffer)
         .withMetadata()
         .jpeg({ quality: 80 })
@@ -108,7 +105,6 @@ export async function POST(request: NextRequest) {
 
     // uploading the resized image to s3
     try {
-      console.log("entered the s3 tryCatch block");
       await s3.send(command);
 
       return NextResponse.json(
@@ -119,18 +115,58 @@ export async function POST(request: NextRequest) {
         { status: 201 }
       );
     } catch (error) {
-      console.log("failed to upload image to s3", error);
-
       return NextResponse.json(
         { message: "Failed to upload image to s3", error: error },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.log("failed to compress image", error);
-
     return NextResponse.json(
       { message: "Failed to compress image", error: error },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const imageDetails = await request.json();
+  const { userId } = auth();
+
+  if (!userId) {
+    return NextResponse.json(
+      {
+        message: "Unauthenticated",
+      },
+      { status: 401 }
+    );
+  }
+
+  if (!imageDetails.id) {
+    return NextResponse.json(
+      {
+        message: "Please provide a valid image ID",
+      },
+      { status: 400 }
+    );
+  }
+
+  const command = new DeleteObjectCommand({
+    Bucket: process.env.AWS_BUCKET_NAME!,
+    Key: imageDetails.id,
+  });
+
+  try {
+    await s3.send(command);
+
+    return NextResponse.json(
+      {
+        message: "Successfully deleted image from s3",
+      },
+      { status: 204 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Failed to delete image to s3", error: error },
       { status: 500 }
     );
   }

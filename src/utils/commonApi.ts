@@ -152,3 +152,13 @@ export const getOldCustomersList = async ({
     throw new Error(`failed to get customers list: ${error}`);
   }
 };
+
+export const deleteImageFromS3 = async ({ id }: { id: string }) => {
+  return axiosConfig({
+    url: "api/images",
+    method: "DELETE",
+    data: {
+      id,
+    },
+  });
+};
