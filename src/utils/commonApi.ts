@@ -130,6 +130,7 @@ export const getOldCustomersList = async ({
   searchWord,
   sortBy,
   signal,
+  customerId,
 }: OldCustomerAPIType) => {
   try {
     const response = await axiosConfig({
@@ -141,6 +142,7 @@ export const getOldCustomersList = async ({
         offset,
         searchWord: searchWord.trim(),
         sortBy,
+        customerId,
       },
       signal,
     });
@@ -149,4 +151,14 @@ export const getOldCustomersList = async ({
   } catch (error: unknown) {
     throw new Error(`failed to get customers list: ${error}`);
   }
+};
+
+export const deleteImageFromS3 = async ({ id }: { id: string }) => {
+  return axiosConfig({
+    url: "api/images",
+    method: "DELETE",
+    data: {
+      id,
+    },
+  });
 };

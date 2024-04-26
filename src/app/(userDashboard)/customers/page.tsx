@@ -57,7 +57,7 @@ const Page = () => {
 
         return undefined;
       },
-      staleTime: 0,
+      gcTime: Infinity,
       enabled: userId ? true : false,
     });
 

@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 import connectMongoDB from "@/lib/mongoDB";
 import { Customer } from "@/models/customer";
 
-interface Query {
+type Query = {
   name?: { $regex: string; $options: string };
   $expr?: { $regexMatch: { input: { $toString: string }; regex: RegExp } };
-}
+  customerId?: string;
+};
 
 // to get the customer list
 export async function GET(request: Request) {
@@ -19,6 +20,8 @@ export async function GET(request: Request) {
   const offsetValue = offset ? +offset : 0;
   const searchWord = searchParams.get("searchWord") || "";
   const sortBy = searchParams.get("sortBy") || "asc";
+  const customerId = searchParams.get("customerId");
+
   let query: Query = {};
   const regex = /^[0-9]+$/;
 
@@ -32,15 +35,19 @@ export async function GET(request: Request) {
     );
   }
 
-  if (regex.test(searchWord)) {
-    query.$expr = {
-      $regexMatch: {
-        input: { $toString: "$number" },
-        regex: new RegExp(searchWord),
-      },
-    };
+  if (customerId) {
+    query.customerId = customerId;
   } else {
-    query.name = { $regex: searchWord, $options: "i" };
+    if (regex.test(searchWord)) {
+      query.$expr = {
+        $regexMatch: {
+          input: { $toString: "$number" },
+          regex: new RegExp(searchWord),
+        },
+      };
+    } else {
+      query.name = { $regex: searchWord, $options: "i" };
+    }
   }
 
   // connects to MongoDB
@@ -119,7 +126,8 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
+  const customerId = searchParams.get("customerId");
+
   const { userId } = auth();
 
   // checking if the user is authenticated or not
@@ -135,7 +143,7 @@ export async function DELETE(request: Request) {
   // connects to MongoDB
   await connectMongoDB();
 
-  if (!id) {
+  if (!customerId) {
     return NextResponse.json(
       {
         message: "Customer ID is required",
@@ -146,11 +154,11 @@ export async function DELETE(request: Request) {
 
   try {
     const response = await Customer.findOneAndDelete({
-      customerId: id,
+      customerId,
     });
 
     // finally checking the deleted customerId is same or not
-    if (id === response?.customerId) {
+    if (customerId === response?.customerId) {
       return NextResponse.json(
         { message: "Successfully deleted" },
         { status: 200 }
