@@ -409,7 +409,7 @@ const EditDetailsForm = ({
         <div className="flex w-full justify-end">
           <Button
             type="submit"
-            className="mr-2"
+            className="mr-2 gap-2"
             onClick={validateSizeList}
             disabled={isMutating === 1}
           >
