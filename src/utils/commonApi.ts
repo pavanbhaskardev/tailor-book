@@ -162,3 +162,38 @@ export const deleteImageFromS3 = async ({ id }: { id: string }) => {
     },
   });
 };
+
+export const getAllOrders = async ({
+  pageParam,
+  signal,
+  userId,
+  customerId = "",
+  searchWord,
+}: {
+  pageParam: number;
+  signal: AbortSignal;
+  userId: string;
+  searchWord: string;
+  customerId?: string;
+}) => {
+  const customer = customerId ? { customerId } : {};
+
+  try {
+    const response = await axiosConfig({
+      url: "api/orders",
+      method: "GET",
+      params: {
+        userId,
+        limit: 10,
+        offset: pageParam,
+        searchWord,
+        ...customer,
+      },
+      signal,
+    });
+
+    return response?.data?.data;
+  } catch (error) {
+    throw new Error(`failed to get orders ${error}`);
+  }
+};

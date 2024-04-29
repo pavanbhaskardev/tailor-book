@@ -8,66 +8,14 @@ import avatarUtil from "@/utils/avatarUtil";
 import { Button } from "@/components/ui/button";
 import { isEmpty } from "ramda";
 import { formatSize } from "@/components/SizeDrawer";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { CustomerDetails } from "@/utils/interfaces";
 import { getOldCustomersList } from "@/utils/commonApi";
 import { useAuth } from "@clerk/nextjs";
 import { ArrowPathIcon } from "@heroicons/react/24/solid";
 import EditDetailsForm from "../components/EditDetailsForm";
-
-const invoices = [
-  {
-    invoice: "INV001",
-    paymentStatus: "Paid",
-    totalAmount: "$250.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV002",
-    paymentStatus: "Pending",
-    totalAmount: "$150.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV003",
-    paymentStatus: "Unpaid",
-    totalAmount: "$350.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV004",
-    paymentStatus: "Paid",
-    totalAmount: "$450.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV005",
-    paymentStatus: "Paid",
-    totalAmount: "$550.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV006",
-    paymentStatus: "Pending",
-    totalAmount: "$200.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV007",
-    paymentStatus: "Unpaid",
-    totalAmount: "$300.00",
-    paymentMethod: "Credit Card",
-  },
-];
+import { DataTable } from "@/components/DataTable";
+import { columns } from "../components/columns";
+import { getAllOrders } from "@/utils/commonApi";
 
 const CustomerDetailsPage = ({ params }: { params: { id: string } }) => {
   const [showForm, setShowForm] = useState(false);
@@ -116,6 +64,20 @@ const CustomerDetailsPage = ({ params }: { params: { id: string } }) => {
       }),
     enabled: !!userId && isEmpty(placeholderData),
     ...placeholderData,
+  });
+
+  const { data: ordersData } = useQuery({
+    queryKey: ["customer-orders-list"],
+    queryFn: ({ signal }) =>
+      getAllOrders({
+        pageParam: 0,
+        signal,
+        searchWord: "",
+        userId: userId || "",
+        customerId: data?.[0]?.customerId || "",
+      }),
+    staleTime: 0,
+    enabled: !!userId && !isEmpty(data || {}),
   });
 
   if (isLoading) {
@@ -219,35 +181,12 @@ const CustomerDetailsPage = ({ params }: { params: { id: string } }) => {
 
         {!showForm && (
           <div className="pt-6">
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center mb-4">
               <CountdownTimerIcon className="h-5 w-5" />
               <h3>History</h3>
             </div>
 
-            <Table className="mt-2">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Invoice</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoices.map((invoice) => (
-                  <TableRow key={invoice.invoice}>
-                    <TableCell className="font-medium">
-                      {invoice.invoice}
-                    </TableCell>
-                    <TableCell>{invoice.paymentStatus}</TableCell>
-                    <TableCell>{invoice.paymentMethod}</TableCell>
-                    <TableCell className="text-right">
-                      {invoice.totalAmount}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable columns={columns} data={ordersData} />
           </div>
         )}
       </section>

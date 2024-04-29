@@ -4,11 +4,10 @@ import connectMongoDB from "@/lib/mongoDB";
 import { Order } from "@/models/order";
 import { Customer } from "@/models/customer";
 
-type Query =
-  | {
-      orderId: number;
-    }
-  | {};
+type Query = {
+  orderId?: number;
+  customerId?: string;
+};
 
 export async function GET(request: Request) {
   const { userId: id } = auth();
@@ -20,6 +19,7 @@ export async function GET(request: Request) {
   const limitValue = +limit;
   const offsetValue = +offset;
 
+  const customerId = searchParams.get("customerId");
   const searchWord = searchParams.get("searchWord") || "";
   let query: Query = {};
   const regex = /^[0-9]+$/;
@@ -38,6 +38,9 @@ export async function GET(request: Request) {
     query = { orderId: +searchWord };
   }
 
+  if (customerId) {
+    query.customerId = customerId;
+  }
   // connects to MongoDB
   await connectMongoDB();
 
@@ -53,8 +56,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ data: response }, { status: 200 });
   } catch (error: unknown) {
-    console.log("failed to retrieve orders", error);
-
     return NextResponse.json(
       {
         message: "Failed to retrieve orders",

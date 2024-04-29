@@ -19,6 +19,7 @@ import axiosConfig from "@/utils/axiosConfig";
 import { OrderDetailsType } from "@/utils/interfaces";
 import OrderCard from "@/components/OrderCard";
 import useDebounce from "@/utils/useDebounce";
+import { getAllOrders } from "@/utils/commonApi";
 
 const Page = () => {
   const { user } = useUser();
@@ -47,32 +48,6 @@ const Page = () => {
     }
   };
 
-  const getAllOrders = async ({
-    pageParam,
-    signal,
-  }: {
-    pageParam: number;
-    signal: AbortSignal;
-  }) => {
-    try {
-      const response = await axiosConfig({
-        url: "api/orders",
-        method: "GET",
-        params: {
-          userId: user?.id,
-          limit: 10,
-          offset: pageParam,
-          searchWord: debouncedValue,
-        },
-        signal,
-      });
-
-      return response?.data?.data;
-    } catch (error) {
-      throw new Error(`failed to get orders ${error}`);
-    }
-  };
-
   // this hook is to create a new user in mongoDB
   useQuery({
     queryKey: ["user-details"],
@@ -91,7 +66,13 @@ const Page = () => {
     refetch,
   } = useInfiniteQuery({
     queryKey: ["order-list", debouncedValue],
-    queryFn: ({ pageParam, signal }) => getAllOrders({ pageParam, signal }),
+    queryFn: ({ pageParam, signal }) =>
+      getAllOrders({
+        pageParam,
+        signal,
+        userId: user?.id || "",
+        searchWord: debouncedValue,
+      }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       if (lastPage.length === 10) {
