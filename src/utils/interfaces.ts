@@ -15,16 +15,18 @@ export type CustomerDetails = {
 };
 
 export type OrderDetailsType = {
+  _id?: string;
+  __v?: number;
   userId: string;
   customerId: string;
   customerDetails: string | CustomerDetails;
   orderId: number;
   status: string;
   orderPhotos: string[];
-  deliveryDate: Date;
+  deliveryDate: Date | string;
   description?: string;
-  newShirtSize?: number[];
-  newPantSize?: number[];
+  newShirtSize?: number[] | [];
+  newPantSize?: number[] | [];
   price: number;
   shirtCount: number;
   pantCount: number;
