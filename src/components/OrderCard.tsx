@@ -52,7 +52,7 @@ const OrderCard = ({
           delay: 0.05 * index,
           ease: [0.33, 1, 0.68, 1],
         }}
-        className="flex gap-4 items-center bg-card p-3 mb-3 rounded-md hover:bg-stone-800"
+        className="flex gap-4 bg-card p-3 mb-3 rounded-md hover:bg-stone-800"
         ref={lastElement}
       >
         <Image
@@ -63,7 +63,7 @@ const OrderCard = ({
           className="h-[110px] w-[120px] object-cover rounded-sm"
         />
 
-        <div className="flex flex-col gap-1 grow">
+        <div className="flex flex-col gap-1 grow h-full">
           <div className="flex w-full justify-between items-end">
             <p className="font-medium leading-5"># {details?.orderId}</p>
             <Badge className={badgeColor[details?.status]}>

@@ -189,7 +189,9 @@ const Page = () => {
       )}
 
       {!isLoading && isEmpty(formattedData) && (
-        <p className="text-center">No results found!</p>
+        <p className="text-center h-[60vh] grid place-items-center">
+          No Customers found!
+        </p>
       )}
     </section>
   );

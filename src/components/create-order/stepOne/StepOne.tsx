@@ -431,7 +431,7 @@ const StepOne = ({ setCustomerDetails, setActiveStep }: StepOneProps) => {
       {/* adding existing customer */}
       <TabsContent value="oldCustomer" className="space-y-4">
         <Search
-          placeholder="Enter customer name"
+          placeholder="Search by name or phone number"
           value={searchWord}
           onChange={handleChange}
         />

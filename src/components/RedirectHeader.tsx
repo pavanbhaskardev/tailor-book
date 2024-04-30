@@ -10,12 +10,8 @@ const RedirectHeader = ({ name }: { name: string }) => {
   const { userId } = useAuth();
 
   return (
-    <div className="flex items-center mt-2 gap-2 text-xl capitalize">
-      <Button
-        size="icon"
-        variant="ghost"
-        onClick={() => router.push(userId ? "/orders" : "/")}
-      >
+    <div className="flex items-center mt-2 gap-2 capitalize">
+      <Button size="icon" variant="ghost" onClick={() => router.back()}>
         <ArrowLeftIcon height={16} width={16} />
       </Button>
       {name}
